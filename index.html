@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cheesy Delight - Start Order</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* Minimal responsive container */
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #fdfdfd;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 400px;
+      margin: 10vh auto;
+      padding: 30px 25px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border: 1px solid #ececec;
+    }
+
+    h1 {
+      margin-bottom: 25px;
+      font-size: 22px;
+      text-align: center;
+      color: #333;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    label {
+      font-size: 14px;
+      color: #555;
+    }
+
+    input {
+      padding: 10px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      outline: none;
+      transition: border 0.2s ease;
+    }
+
+    input:focus {
+      border-color: #ff5722;
+    }
+
+    button[type="submit"] {
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      background-color: #ff5722;
+      color: white;
+      border: none;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #e64a19;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        margin: 5vh 16px;
+        padding: 25px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to Cheesy Delight</h1>
+    <form id="startForm">
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" required />
+
+      <label for="table">Table Number:</label>
+      <input type="number" id="table" required />
+
+      <button type="submit">Start Order</button>
+    </form>
+  </div>
+
+<script>
+  document.getElementById('startForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = document.getElementById('name').value;
+    const table = document.getElementById('table').value;
+
+    if (name && table) {
+      const sessionId = 'CD-' + Date.now(); // Unique ID
+      localStorage.setItem('cheesy_sessionId', sessionId);
+      localStorage.setItem('cheesy_name', name);
+      localStorage.setItem('cheesy_table', table);
+
+      window.location.href = `menu.html?session=${sessionId}`;
+    }
+  });
+</script>
+</body>
+</html>

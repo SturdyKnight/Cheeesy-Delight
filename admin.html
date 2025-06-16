@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel - Cheesy Delight</title>
+
+  <!-- Materialize CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+
+  <!-- Admin Script -->
+  <script defer src="admin.js"></script>
+</head>
+<body class="container">
+
+  <h4 class="orange-text center-align">Cheesy Delight - Admin Panel</h4>
+
+  <!-- Add Menu Item Form -->
+  <div class="card">
+    <div class="card-content">
+      <span class="card-title">Add Menu Item</span>
+      <form id="menu-form">
+        <div class="input-field">
+          <input type="text" id="item-name" required>
+          <label for="item-name">Item Name</label>
+        </div>
+
+        <div class="input-field">
+          <input type="number" id="item-price" required>
+          <label for="item-price">Price (₹)</label>
+        </div>
+
+        <div class="input-field">
+          <select id="item-category" required>
+            <option value="" disabled selected>Select Category</option>
+            <option value="starters">Starters</option>
+            <option value="main-course">Main Course</option>
+            <option value="desserts">Desserts</option>
+            <option value="drinks">Drinks</option>
+          </select>
+          <label>Category</label>
+        </div>
+
+<!-- Replace upload field with this in your existing admin.html -->
+<div class="input-field">
+  <input type="url" id="item-image-url" required>
+  <label for="item-image-url">Image URL</label>
+</div>
+
+
+        <button class="btn orange waves-effect waves-light" type="submit">
+          Add Item <i class="material-icons right">add</i>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Menu Items List -->
+  <h5 class="orange-text">Current Menu</h5>
+  <div id="menu-items" class="row"></div>
+
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      M.AutoInit();
+    });
+  </script>
+</body>
+</html>

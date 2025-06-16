@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Owner Dashboard - Cheesy Delight</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <style>
+    body {
+      padding: 20px;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    table {
+      margin-top: 20px;
+    }
+    th, td {
+      font-size: 14px;
+    }
+    #total-sales {
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h4>📊 Cheesy Delight - Owner Panel</h4>
+
+  <table class="highlight responsive-table">
+    <thead>
+      <tr>
+        <th>Order ID</th>
+        <th>Name</th>
+        <th>Table</th>
+        <th>Status</th>
+        <th>Items</th>
+        <th>Total (₹)</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody id="orders-table-body"></tbody>
+  </table>
+
+  <div id="total-sales">Total Sales: ₹0</div>
+
+  <!-- Firebase + Script -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="owner.js"></script>
+</body>
+</html>
