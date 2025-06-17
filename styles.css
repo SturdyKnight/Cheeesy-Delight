@@ -307,7 +307,7 @@ h1, h2, h3 {
   bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(to right, #bc3f1c, #8b3b22);
+  background: linear-gradient(to right, #262626, #5c5c5c);
   color: #fff;
   padding: 12px 24px;
   font-size: 14px;
