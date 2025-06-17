@@ -1,9 +1,19 @@
+/* 🎨 Font System */
+:root {
+  --font-heading: 'Poppins', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-accent: 'Rubik', sans-serif;
+  --font-brand: 'Pacifico', cursive;
+}
+
 /* Base layout */
 body {
-  font-family: 'Segoe UI', sans-serif;
+  font-family: var(--font-body);
   background-color: #fdfdfd;
   margin: 0;
   padding: 0;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .container {
@@ -16,13 +26,18 @@ body {
   border: 1px solid #ececec;
 }
 
-/* Brand Heading */
+/* Headings */
+h1, h2, h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
 .brand-heading {
   text-align: center;
-  font-size: 26px;
+  font-size: 32px;
   margin-bottom: 40px;
-  font-weight: 600;
   color: #333;
+  font-family: var(--font-brand);
 }
 
 /* Section Message & Divider */
@@ -77,46 +92,82 @@ body {
   text-align: center;
 }
 
+.menu-info p strong {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.menu-info p {
+  margin: 6px 0;
+  color: #333;
+  font-weight: 400;
+}
+
+.menu-info span.price {
+  font-family: var(--font-accent);
+  font-weight: 600;
+  color: #ff5722;
+}
+
 /* ADD Button (initial) */
 .add-btn {
-  padding: 6px 14px;
+  padding: 12px 18px;
   font-size: 14px;
-  border-radius: 5px;
-  background-color: #ff5722;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(to right, #ff5722, #ff7043);
   color: white;
   border: none;
   cursor: pointer;
   margin-top: 10px;
-  transition: background 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 87, 34, 0.2);
+  transition: background 0.3s ease, transform 0.1s ease;
+  text-transform: uppercase;
 }
 
 .add-btn:hover {
-  background-color: #e64a19;
+  background: linear-gradient(to right, #e64a19, #ff7043);
+  transform: scale(1.03);
 }
 
-/* Quantity Controls */
+/* Quantity Controls Modern */
 .qty-controls {
   display: flex;
   align-items: center;
-  gap: 6px;
   justify-content: center;
+  gap: 10px;
   margin-top: 10px;
 }
 
 .qty-controls button {
-  padding: 4px 10px;
-  background-color: #ff5722;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  font-size: 16px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 22px;
+  font-weight: 600;
+  background: #f5f5f5;
+  color: #ff5722;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  font-family: var(--font-heading);
+}
+
+.qty-controls button:hover {
+  background: #fff0e6;
+  transform: scale(1.05);
 }
 
 .qty-controls span {
   min-width: 24px;
   text-align: center;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  color: #333;
 }
 
 /* Cart Section */
@@ -127,6 +178,11 @@ body {
   border-radius: 12px;
   box-shadow: rgb(204, 219, 232) 3px 3px 6px 0px inset, rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset;
   border: 1px solid #e0e0e0;
+}
+
+#cart h2 {
+  font-family: var(--font-heading);
+  font-weight: 600;
 }
 
 /* Cart Items */
@@ -140,7 +196,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 14px;
+  font-size: 15px;
+  font-family: var(--font-body);
   flex-wrap: wrap;
 }
 
@@ -153,7 +210,7 @@ body {
   margin-left: 10px;
 }
 
-/* Buttons */
+/* Buttons: Order / Checkout */
 .cart-actions {
   display: flex;
   gap: 10px;
@@ -163,24 +220,31 @@ body {
 #order-btn,
 #checkout-btn {
   flex: 1;
-  padding: 12px;
+  padding: 12px 18px;
   font-size: 16px;
-  border-radius: 6px;
-  background-color: #ff5722;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(to right, #ff5722, #ff7043);
   color: white;
   border: none;
   cursor: pointer;
-  transition: background 0.3s ease;
+  box-shadow: 0 2px 8px rgba(255, 87, 34, 0.2);
+  transition: background 0.3s ease, transform 0.1s ease;
+  text-transform: uppercase;
 }
 
 #order-btn:hover,
 #checkout-btn:hover {
-  background-color: #e64a19;
+  background: linear-gradient(to right, #e64a19, #ff7043);
+  transform: scale(1.03);
 }
 
 #order-btn:disabled,
 #checkout-btn:disabled {
-  background-color: #ccc;
+  background: #ccc;
+  color: #888;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
@@ -189,6 +253,7 @@ body {
   margin-top: 15px;
   font-weight: bold;
   color: #00796b;
+  font-family: var(--font-heading);
 }
 
 /* Animations */
@@ -235,4 +300,29 @@ body {
     justify-content: space-between;
     gap: 8px;
   }
+}
+/* (… keep everything above unchanged …) */
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(to right, #bc3f1c, #8b3b22);
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-family: var(--font-body);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
+  animation: toastFadeInOut 3s ease-in-out forwards;
+  z-index: 9999;
+}
+
+@keyframes toastFadeInOut {
+  0%   { opacity: 0; transform: translate(-50%, 20px); }
+  10%  { opacity: 1; transform: translate(-50%, 0); }
+  90%  { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
 }

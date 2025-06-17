@@ -20,6 +20,17 @@ const tableNumber = localStorage.getItem('cheesy_table');
 const categories = ['starters', 'main-course', 'desserts', 'drinks'];
 let cart = [];
 
+// ✅ Toast Creator
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerText = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
+}
+
 function renderMenuItem(category, itemId, itemData) {
   const itemDiv = document.createElement('div');
   itemDiv.className = 'menu-item';
@@ -71,6 +82,7 @@ function addToCart(id, name, price) {
   const item = cart.find(i => i.id === id);
   if (!item) {
     cart.push({ id, name, price, qty: 1 });
+    showToast(`✅ 1 ${name} added`);
   }
   updateCart();
   loadMenu();
@@ -148,6 +160,7 @@ function orderNow() {
     cart = [];
     updateCart();
     showStatus("🧾 Order is added and being prepared.");
+    showToast("🧾 Order sent to kitchen");
   });
 }
 
@@ -161,26 +174,23 @@ function checkout() {
     if (order.status === 'done') {
       const dateStr = new Date(order.timestamp).toLocaleString();
 
-      let receipt = '      Cheesy Delight\n';
-      receipt += '-----------------------------\n';
-      receipt += `Name: ${order.name}\n`;
-      receipt += `Table: ${order.table}\n`;
-      receipt += `Date: ${dateStr}\n`;
-      receipt += '-----------------------------\n';
+      let receipt = `      Cheesy Delight\n-----------------------------\n`;
+      receipt += `Name: ${order.name}\nTable: ${order.table}\nDate: ${dateStr}\n`;
+      receipt += `-----------------------------\n`;
+
       order.items.forEach(item => {
-        receipt += `${item.name.padEnd(20)} ₹${item.price} × ${item.qty} = ₹${item.price * item.qty}\n`;
+        receipt += `${item.name.padEnd(16)} ₹${item.price} × ${item.qty} = ₹${item.price * item.qty}\n`;
       });
-      receipt += '-----------------------------\n';
-      receipt += `TOTAL: ₹${order.total}\n`;
-      receipt += '-----------------------------\n';
-      receipt += '      Thank you! Visit again';
+
+      receipt += `-----------------------------\nTOTAL: ₹${order.total}\n-----------------------------\n      Thank you! Visit again`;
 
       const receiptDiv = document.createElement('div');
       receiptDiv.style.padding = '20px';
       receiptDiv.style.fontFamily = 'monospace';
-      receiptDiv.style.whiteSpace = 'pre';
+      receiptDiv.style.whiteSpace = 'pre-wrap';
       receiptDiv.style.fontSize = '12px';
       receiptDiv.style.width = '250px';
+      receiptDiv.style.maxWidth = '100%';
       receiptDiv.innerText = receipt;
       document.body.appendChild(receiptDiv);
 
@@ -197,20 +207,20 @@ function checkout() {
         pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
         document.body.removeChild(receiptDiv);
 
-        // ✅ Expire session
         localStorage.removeItem('cheesy_sessionId');
         localStorage.removeItem('cheesy_name');
         localStorage.removeItem('cheesy_table');
 
-setTimeout(() => {
-  window.location.href = "index.html";
-}, 2000);
+        showToast("✅ Receipt downloaded");
 
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 2000);
       });
 
-      showStatus("✅ Receipt downloaded.");
     } else {
       showStatus("⏳ Please wait, your order is still being prepared.");
+      showToast("⌛ Not ready yet");
     }
   });
 }
@@ -232,6 +242,7 @@ function listenForKitchenUpdate() {
       showStatus("🍽 Your order is ready! You may now checkout.");
       document.getElementById('checkout-btn').disabled = false;
       document.getElementById('order-btn').disabled = true;
+      showToast("🍽 Order marked as done");
     } else {
       document.getElementById('checkout-btn').disabled = true;
     }
