@@ -326,3 +326,24 @@ h1, h2, h3 {
   90%  { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -10px); }
 }
+
+.site-footer {
+  text-align: center;
+  font-size: 13px;
+  color: #888;
+  padding: 20px 10px 40px;
+  font-family: 'Inter', sans-serif;
+  border-top: 1px solid #eee;
+  margin-top: 40px;
+  background: #fafafa;
+}
+
+.site-footer a {
+  color: #ff5722;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}

@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cheesy Delight - Menu</title>
   <link rel="stylesheet" href="styles.css" />
   <!-- 👇 Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap"
+    rel="stylesheet">
 
-<script>
-  const urlSession = new URLSearchParams(window.location.search).get('session');
-  const localSession = localStorage.getItem('cheesy_sessionId');
+  <script>
+    const urlSession = new URLSearchParams(window.location.search).get('session');
+    const localSession = localStorage.getItem('cheesy_sessionId');
 
-  // 🚫 Redirect if tampered or session expired
-  if (!urlSession || urlSession !== localSession) {
-    alert("⚠️ Your session has expired or is invalid. Please start your order again.");
-    window.location.href = "index.html";
-  }
-</script>
+    // 🚫 Redirect if tampered or session expired
+    if (!urlSession || urlSession !== localSession) {
+      alert("⚠️ Your session has expired or is invalid. Please start your order again.");
+      window.location.href = "index.html";
+    }
+  </script>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -30,6 +33,7 @@
   <!-- JS -->
   <script defer src="script.js"></script>
 </head>
+
 <body>
   <div class="container">
     <h1 class="brand-heading">Cheesy Delight</h1>
@@ -60,13 +64,17 @@
 
       <p id="order-status" class="hidden"></p>
     </div>
-    
-  <div id="receipt-preview" style="display: none; position: relative; width: 384px; height: 576px;">
-  <div id="receipt-content" style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4; z-index: 1;">
-    <!-- Receipt text will be injected here -->
-  </div>
-</div>
+
+    <div id="receipt-preview" style="display: none; position: relative; width: 384px; height: 576px;">
+      <div id="receipt-content"
+        style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4; z-index: 1;">
+        <!-- Receipt text will be injected here -->
+      </div>
+    </div>
 
   </div>
+    <div id="footer-container"></div>
+  <script src="footer.js"></script>
 </body>
+
 </html>

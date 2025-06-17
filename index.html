@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cheesy Delight - Start Order</title>
   <link rel="stylesheet" href="styles.css" />
-  <!-- 👇 Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
   <style>
-    /* Minimal responsive container */
     body {
       font-family: 'Segoe UI', sans-serif;
       background-color: #fdfdfd;
@@ -98,21 +96,31 @@
     </form>
   </div>
 
-<script>
-  document.getElementById('startForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-    const name = document.getElementById('name').value;
-    const table = document.getElementById('table').value;
+  <!-- ✅ Footer inserted here -->
+  <footer class="site-footer">
+    <p>&copy; <span id="year"></span> <strong>@cyberpeshwas</strong> · All rights reserved</p>
+    <p>📞 <a href="tel:+918180858531">+91 81808 58531</a> |
+       💬 <a href="https://wa.me/918180858531" target="_blank">Chat on WhatsApp</a></p>
+  </footer>
 
-    if (name && table) {
-      const sessionId = 'CD-' + Date.now(); // Unique ID
-      localStorage.setItem('cheesy_sessionId', sessionId);
-      localStorage.setItem('cheesy_name', name);
-      localStorage.setItem('cheesy_table', table);
+  <!-- ✅ Scripts after footer loads -->
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
 
-      window.location.href = `menu.html?session=${sessionId}`;
-    }
-  });
-</script>
+    document.getElementById('startForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const table = document.getElementById('table').value;
+
+      if (name && table) {
+        const sessionId = 'CD-' + Date.now();
+        localStorage.setItem('cheesy_sessionId', sessionId);
+        localStorage.setItem('cheesy_name', name);
+        localStorage.setItem('cheesy_table', table);
+
+        window.location.href = `menu.html?session=${sessionId}`;
+      }
+    });
+  </script>
 </body>
 </html>
