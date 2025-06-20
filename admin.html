@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel - Cheesy Delight</title>
   <link rel="stylesheet" href="styles.css" />
-  
-  <!-- 👇 Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
 
   <!-- Materialize CSS -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
@@ -48,15 +48,13 @@
             <option value="desserts">Desserts</option>
             <option value="drinks">Drinks</option>
           </select>
-          <label>Category</label>
+          <label for="item-category">Category</label>
         </div>
 
-<!-- Replace upload field with this in your existing admin.html -->
-<div class="input-field">
-  <input type="url" id="item-image-url" required>
-  <label for="item-image-url">Image URL</label>
-</div>
-
+        <div class="input-field">
+          <input type="url" id="item-image-url" required>
+          <label for="item-image-url">Image URL</label>
+        </div>
 
         <button class="btn orange waves-effect waves-light" type="submit">
           Add Item <i class="material-icons right">add</i>
@@ -69,13 +67,29 @@
   <h5 class="orange-text">Current Menu</h5>
   <div id="menu-items" class="row"></div>
 
+  <!-- Footer -->
+  <footer class="site-footer">
+    <p>&copy; <span id="year"></span> <strong>cyberpeshwas</strong> · All rights reserved</p>
+    <p>📞 <a href="tel:+918180858531">+91 81808 58531</a> |
+       💬 <a href="https://wa.me/918180858531" target="_blank">Chat on WhatsApp</a></p>
+  </footer>
+
   <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-  <div id="footer-container"></div>
-  <script src="footer.js">
+
+  <!-- Init Materialize & Load Footer -->
+  <script>
     document.addEventListener('DOMContentLoaded', function () {
       M.AutoInit();
+
+      // ✅ Optional: Load footer dynamically
+      fetch('footer.html')
+        .then(res => res.text())
+        .then(html => {
+          document.getElementById('footer-container').innerHTML = html;
+        });
     });
   </script>
+  
 </body>
 </html>
