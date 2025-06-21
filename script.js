@@ -8,7 +8,6 @@ const firebaseConfig = {
   messagingSenderId: "433558050592",
   appId: "1:433558050592:web:169b277e2337931475e945"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -16,9 +15,11 @@ const db = firebase.database();
 const sessionId = new URLSearchParams(window.location.search).get('session');
 const customerName = localStorage.getItem('cheesy_name');
 const tableNumber = localStorage.getItem('cheesy_table');
-
 const categories = ['starters', 'main-course', 'desserts', 'drinks'];
 let cart = [];
+
+// ✅ Audio
+const userAudio = new Audio('user.mp3');
 
 // ✅ Toast Creator
 function showToast(message) {
@@ -26,15 +27,13 @@ function showToast(message) {
   toast.className = 'toast';
   toast.innerText = message;
   document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.remove();
-  }, 3000);
+  setTimeout(() => toast.remove(), 3000);
 }
 
+// ✅ Menu Rendering
 function renderMenuItem(category, itemId, itemData) {
   const itemDiv = document.createElement('div');
   itemDiv.className = 'menu-item';
-
   const cartItem = cart.find(i => i.id === itemId);
   const qty = cartItem ? cartItem.qty : 0;
 
@@ -55,8 +54,7 @@ function renderMenuItem(category, itemId, itemData) {
               </div>`
         }
       </div>
-    </div>
-  `;
+    </div>`;
   document.getElementById(category).appendChild(itemDiv);
 }
 
@@ -66,11 +64,8 @@ function loadMenu() {
       const section = document.getElementById(category);
       section.innerHTML = '';
       const data = snapshot.val();
-
       if (data) {
-        for (let id in data) {
-          renderMenuItem(category, id, data[id]);
-        }
+        for (let id in data) renderMenuItem(category, id, data[id]);
       } else {
         section.innerHTML = `<p class="empty-menu-msg">No items available in this category right now.</p>`;
       }
@@ -78,6 +73,7 @@ function loadMenu() {
   });
 }
 
+// ✅ Cart Logic
 function addToCart(id, name, price) {
   const item = cart.find(i => i.id === id);
   if (!item) {
@@ -91,12 +87,8 @@ function addToCart(id, name, price) {
 function updateQuantity(id, change) {
   const item = cart.find(i => i.id === id);
   if (!item) return;
-
   item.qty += change;
-  if (item.qty <= 0) {
-    cart = cart.filter(i => i.id !== id);
-  }
-
+  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   updateCart();
   loadMenu();
 }
@@ -106,7 +98,6 @@ function updateCart() {
   const total = document.getElementById('total');
   cartItems.innerHTML = '';
   let sum = 0;
-
   cart.forEach(item => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -116,7 +107,6 @@ function updateCart() {
     cartItems.appendChild(li);
     sum += item.price * item.qty;
   });
-
   total.textContent = sum;
   document.getElementById('order-btn').disabled = cart.length === 0;
 }
@@ -128,13 +118,12 @@ function showStatus(msg) {
   status.classList.add('fade-in');
 }
 
+// ✅ Order Placement
 function orderNow() {
   if (cart.length === 0) return;
-
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const prev = snapshot.val();
     const allItems = prev ? [...prev.items, ...cart] : [...cart];
-
     const merged = {};
     allItems.forEach(item => {
       if (!merged[item.id]) {
@@ -143,10 +132,8 @@ function orderNow() {
         merged[item.id].qty += item.qty;
       }
     });
-
     const finalItems = Object.values(merged);
     const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-
     db.ref('orders/' + sessionId).set({
       orderId: sessionId,
       name: customerName,
@@ -157,6 +144,9 @@ function orderNow() {
       status: 'preparing'
     });
 
+    // ✅ Trigger kitchen sound (only for kitchen.js)
+    localStorage.setItem("last_order_sound", sessionId);
+
     cart = [];
     updateCart();
     showStatus("🧾 Order is added and being prepared.");
@@ -164,24 +154,20 @@ function orderNow() {
   });
 }
 
+// ✅ Checkout
 function checkout() {
   if (!sessionId) return;
-
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
     if (!order) return;
 
     if (order.status === 'done') {
       const dateStr = new Date(order.timestamp).toLocaleString();
-
       let receipt = `      Cheesy Delight\n-----------------------------\n`;
-      receipt += `Name: ${order.name}\nTable: ${order.table}\nDate: ${dateStr}\n`;
-      receipt += `-----------------------------\n`;
-
+      receipt += `Name: ${order.name}\nTable: ${order.table}\nDate: ${dateStr}\n-----------------------------\n`;
       order.items.forEach(item => {
         receipt += `${item.name.padEnd(16)} ₹${item.price} × ${item.qty} = ₹${item.price * item.qty}\n`;
       });
-
       receipt += `-----------------------------\nTOTAL: ₹${order.total}\n-----------------------------\n      Thank you! Visit again`;
 
       const receiptDiv = document.createElement('div');
@@ -190,34 +176,23 @@ function checkout() {
       receiptDiv.style.whiteSpace = 'pre-wrap';
       receiptDiv.style.fontSize = '12px';
       receiptDiv.style.width = '250px';
-      receiptDiv.style.maxWidth = '100%';
-      receiptDiv.innerText = receipt;
       document.body.appendChild(receiptDiv);
+      receiptDiv.innerText = receipt;
 
       html2canvas(receiptDiv).then(canvas => {
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'px',
-          format: [260, 400]
-        });
-
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [260, 400] });
         pdf.addImage(imgData, 'PNG', 5, 5, 250, 360);
         pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
         document.body.removeChild(receiptDiv);
-
         localStorage.removeItem('cheesy_sessionId');
         localStorage.removeItem('cheesy_name');
         localStorage.removeItem('cheesy_table');
-
         showToast("✅ Receipt downloaded");
 
-        setTimeout(() => {
-          window.location.href = "index.html";
-        }, 2000);
+        setTimeout(() => window.location.href = "index.html", 2000);
       });
-
     } else {
       showStatus("⏳ Please wait, your order is still being prepared.");
       showToast("⌛ Not ready yet");
@@ -225,6 +200,7 @@ function checkout() {
   });
 }
 
+// ✅ State Persistence
 function loadPreviousOrder() {
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
@@ -235,6 +211,7 @@ function loadPreviousOrder() {
   });
 }
 
+// ✅ Listen for Kitchen Done
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
@@ -243,17 +220,20 @@ function listenForKitchenUpdate() {
       document.getElementById('checkout-btn').disabled = false;
       document.getElementById('order-btn').disabled = true;
       showToast("🍽 Order marked as done");
+
+      // ✅ Play user notification sound
+      userAudio.play().catch(e => console.warn('Autoplay blocked'));
     } else {
       document.getElementById('checkout-btn').disabled = true;
     }
   });
 }
 
+// ✅ Init
 document.addEventListener('DOMContentLoaded', () => {
   loadMenu();
   loadPreviousOrder();
   listenForKitchenUpdate();
-
   document.getElementById('order-btn').addEventListener('click', orderNow);
   document.getElementById('checkout-btn').addEventListener('click', checkout);
 });
