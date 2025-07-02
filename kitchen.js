@@ -11,66 +11,91 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ✅ Track previously shown orders to avoid duplicate sound
+// ✅ DOM Elements
+const ordersDiv = document.getElementById("orders");
+const kitchenSound = document.getElementById("kitchenSound");
+
+// ✅ Track already displayed orders
 let shownOrders = new Set();
 
-// ✅ Sound
-const kitchenSound = new Audio("kitchen.mp3");
-
-const ordersDiv = document.getElementById('orders');
-
+// ✅ Render a single order card
 function renderOrder(orderId, orderData) {
-  const card = document.createElement('div');
-  card.className = 'order-card';
+  if (document.getElementById(`order-${orderId}`)) return; // Already shown
+
+  const card = document.createElement("div");
+  card.className = "order-card";
+  card.id = `order-${orderId}`;
+
+  const itemsHTML = orderData.items.map(
+    item => `<li>${item.name} × ${item.qty} - ₹${item.price * item.qty}</li>`
+  ).join("");
+
   card.innerHTML = `
-    <h4>Order #${orderId}</h4>
+    <h5>Order #${orderId}</h5>
     <p><strong>Name:</strong> ${orderData.name}</p>
     <p><strong>Table:</strong> ${orderData.table}</p>
-    <ul>
-      ${orderData.items.map(item => `<li>${item.name} × ${item.qty} - ₹${item.price * item.qty}</li>`).join('')}
-    </ul>
+    <ul>${itemsHTML}</ul>
     <p><strong>Total:</strong> ₹${orderData.total}</p>
     <p><strong>Time:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
-    <button onclick="markAsDone('${orderId}')">Mark as Done</button>
+    <button class="btn waves-effect waves-light orange darken-2" onclick="markAsDone('${orderId}')">
+      ✅ Mark as Done
+    </button>
   `;
+
   ordersDiv.appendChild(card);
+  shownOrders.add(orderId); // Track this order as shown
+
+  // ✅ Play sound
+  kitchenSound.play().catch(() => {
+    console.warn("Autoplay blocked. Interaction needed.");
+  });
 }
 
+// ✅ Mark order as done
 function markAsDone(orderId) {
-  db.ref('orders/' + orderId).update({ status: 'done' });
-  M.toast({ html: 'Order marked done ✅', classes: 'green' });
+  const card = document.getElementById(`order-${orderId}`);
+  if (card) {
+    card.classList.add("fade-out");
+    setTimeout(() => card.remove(), 500);
+  }
+
+  db.ref("orders/" + orderId).update({ status: "done" });
+  M.toast({ html: "Order marked done ✅", classes: "green" });
 }
 
-// ✅ Load orders and play sound on new one
+// ✅ Load and listen for real-time preparing orders
 function loadOrders() {
-  db.ref('orders').on('value', snapshot => {
+  db.ref("orders").on("value", snapshot => {
     const orders = snapshot.val();
-    ordersDiv.innerHTML = '';
+    ordersDiv.innerHTML = "";
 
-    let hasNewOrder = false;
+    let anyActive = false;
 
     for (let id in orders) {
       const order = orders[id];
-      if (order.status === 'preparing') {
-        renderOrder(id, order);
 
-        // 🔔 Play sound only for unseen order
-        if (!shownOrders.has(id)) {
-          shownOrders.add(id);
-          hasNewOrder = true;
-        }
+      if (order.status === "preparing") {
+        renderOrder(id, order);
+        anyActive = true;
       }
     }
 
-    if (!ordersDiv.hasChildNodes()) {
+    if (!anyActive) {
       ordersDiv.innerHTML = `<p class="center-align grey-text">No active orders 🎉</p>`;
     }
+  });
 
-    // ✅ Play sound after DOM is updated
-    if (hasNewOrder) {
-      kitchenSound.play().catch(() => {
-        console.warn("Autoplay blocked. User interaction required.");
-      });
+  // Optional: listen for removal or done update
+  db.ref("orders").on("child_changed", snapshot => {
+    const id = snapshot.key;
+    const order = snapshot.val();
+
+    if (order.status === "done") {
+      const card = document.getElementById(`order-${id}`);
+      if (card) {
+        card.classList.add("fade-out");
+        setTimeout(() => card.remove(), 500);
+      }
     }
   });
 }
