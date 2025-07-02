@@ -6,10 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cheeesy Delight - Start Order</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" type="image/png" href="logo.png">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap"
-    rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet" />
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -70,6 +68,10 @@
       transition: background 0.3s ease;
     }
 
+    button[type="submit"]:hover {
+      background-color: #e64a19;
+    }
+
     .logo-wrapper {
       text-align: center;
       margin-bottom: 15px;
@@ -82,8 +84,16 @@
       display: inline-block;
     }
 
-    button[type="submit"]:hover {
-      background-color: #e64a19;
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 13px;
+      color: #888;
+    }
+
+    footer a {
+      text-decoration: none;
+      color: #ff5722;
     }
 
     @media (max-width: 480px) {
@@ -106,7 +116,6 @@
     </div>
     <h1>Welcome to Cheeesy Delight</h1>
 
-
     <form id="startForm">
       <label for="name">Your Name:</label>
       <input type="text" id="name" required />
@@ -118,21 +127,21 @@
     </form>
   </div>
 
-  <!-- ✅ Footer inserted here -->
+  <!-- Footer -->
   <footer class="site-footer">
     <p>&copy; <span id="year"></span> <strong>cyberpeshwas</strong> · All rights reserved</p>
     <p>📞 <a href="tel:+918180858531">+91 81808 58531</a> |
       💬 <a href="https://wa.me/918180858531" target="_blank">Chat on WhatsApp</a></p>
   </footer>
 
-  <!-- ✅ Scripts after footer loads -->
+  <!-- Script -->
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
 
     document.getElementById('startForm').addEventListener('submit', function (e) {
       e.preventDefault();
-      const name = document.getElementById('name').value;
-      const table = document.getElementById('table').value;
+      const name = document.getElementById('name').value.trim();
+      const table = document.getElementById('table').value.trim();
 
       if (name && table) {
         const sessionId = 'CD-' + Date.now();
@@ -140,7 +149,8 @@
         localStorage.setItem('cheesy_name', name);
         localStorage.setItem('cheesy_table', table);
 
-        window.location.href = `menu.html?session=${sessionId}`;
+        // 🚫 Prevent user from going back to this form
+        window.location.replace(`menu.html?session=${sessionId}`);
       }
     });
   </script>

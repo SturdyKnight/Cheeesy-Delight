@@ -1,17 +1,15 @@
+<!-- 🍽️ menu.html -->
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cheeesy Delight - Menu</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet" />
 
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
-
-  <!-- Redirect if session tampered -->
+  <!-- Session Check -->
   <script>
     const urlSession = new URLSearchParams(window.location.search).get('session');
     const localSession = localStorage.getItem('cheesy_sessionId');
@@ -21,18 +19,18 @@
     }
   </script>
 
-  <!-- html2canvas + jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-  <!-- Firebase SDKs -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <!-- Your Script -->
+  <!-- PDF Tools -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- App Logic -->
   <script defer src="script.js"></script>
 
-  <!-- Loader Styling -->
+  <!-- Inline Styles -->
   <style>
     #loader {
       display: flex;
@@ -41,35 +39,57 @@
       height: 100vh;
       flex-direction: column;
     }
-
     #menu-main {
       display: none;
       opacity: 0;
       transition: opacity 0.5s ease;
     }
-
     .fade-in {
       display: block !important;
       opacity: 1 !important;
     }
-
     .cooking-text {
       font-family: 'Pacifico', cursive;
       font-size: 22px;
       margin-top: 10px;
       color: #ff5722;
     }
+    /* Back Warning */
+    #backModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      justify-content: center;
+      align-items: center;
+    }
+    #backModal .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      text-align: center;
+      max-width: 400px;
+    }
+    #backModal button {
+      background-color: #ff5722;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      margin-top: 15px;
+      cursor: pointer;
+    }
   </style>
 </head>
-
 <body>
-  <!-- 🍳 Cooking Loader -->
+  <!-- Loader -->
   <div id="loader">
     <img src="cooking.gif" alt="Cooking..." width="120" />
     <div class="cooking-text">Preparing your delicious menu!</div>
   </div>
 
-  <!-- 🍽️ Main Menu Section -->
+  <!-- Main Menu -->
   <div id="menu-main">
     <div class="container">
       <div class="logo-wrapper">
@@ -103,32 +123,54 @@
         <p id="order-status" class="hidden"></p>
       </div>
 
-      <div id="receipt-preview" style="display: none; position: relative; width: 384px; height: 576px;">
-        <div id="receipt-content"
-          style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4; z-index: 1;">
-          <!-- Receipt text will be injected here -->
-        </div>
+      <div id="receipt-preview" style="display: none; width: 384px; height: 576px; position: relative;">
+        <div id="receipt-content" style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4;"></div>
       </div>
     </div>
-    <div id="footer-container"></div>
   </div>
 
-  <!-- Footer Loader -->
+  <!-- Nice Back Modal -->
+  <div id="backModal">
+    <div class="modal-content">
+      <h4>Please Stay!</h4>
+      <p>Going back may cancel your session and order.</p>
+      <button onclick="closeBackModal()">Okay, I’ll Stay</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div id="footer-container"></div>
   <script src="footer.js"></script>
 
-  <!-- Loader to Menu Transition Script -->
+  <!-- Loader + Back Prevention -->
   <script>
-    window.addEventListener('load', () => {
-      const loader = document.getElementById('loader');
-      const menu = document.getElementById('menu-main');
-
-      // Optional: Simulated wait or wait for menu load logic
+    window.addEventListener("load", () => {
       setTimeout(() => {
-        loader.style.display = "none";
-        menu.classList.add("fade-in");
-      }, 1000); // Adjust as needed
+        document.getElementById("loader").style.display = "none";
+        document.getElementById("menu-main").classList.add("fade-in");
+        history.pushState(null, "", location.href); // trap back
+      }, 1000);
+    });
+
+    // 🚫 Prevent going back
+    window.addEventListener("popstate", function () {
+      showBackModal();
+      history.pushState(null, "", location.href);
+    });
+
+    function showBackModal() {
+      document.getElementById("backModal").style.display = "flex";
+    }
+
+    function closeBackModal() {
+      document.getElementById("backModal").style.display = "none";
+    }
+
+    // Optional: prevent accidental refresh
+    window.addEventListener("beforeunload", function (e) {
+      e.preventDefault();
+      e.returnValue = "";
     });
   </script>
 </body>
-
 </html>
