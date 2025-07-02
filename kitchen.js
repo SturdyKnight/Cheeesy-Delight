@@ -18,11 +18,11 @@ const ordersDiv = document.getElementById("orders");
 const kitchenSound = document.getElementById("kitchenSound");
 
 // ✅ Track shown orders
-let shownOrders = new Set();
+const shownOrders = new Set();
 
 // ✅ Render new order
 function renderOrder(orderId, orderData) {
-  if (document.getElementById(`order-${orderId}`)) return;
+  if (shownOrders.has(orderId)) return;
 
   const card = document.createElement("div");
   card.className = "order-card";
@@ -47,9 +47,12 @@ function renderOrder(orderId, orderData) {
   ordersDiv.appendChild(card);
   shownOrders.add(orderId);
 
-  // 🔔 Sound & Notification
-  kitchenSound.play().catch(() => console.warn("Autoplay blocked"));
+  // 🔊 Play sound
+  kitchenSound.play().catch(() => {
+    console.warn("Autoplay blocked");
+  });
 
+  // 🔔 Show browser notification
   if (Notification.permission === "granted") {
     new Notification("🍕 New Order!", {
       body: `Table ${orderData.table} placed an order.`,
@@ -58,7 +61,7 @@ function renderOrder(orderId, orderData) {
   }
 }
 
-// ✅ Mark as done
+// ✅ Mark order as done
 function markAsDone(orderId) {
   const card = document.getElementById(`order-${orderId}`);
   if (card) {
@@ -67,25 +70,27 @@ function markAsDone(orderId) {
   }
 
   db.ref("orders/" + orderId).update({ status: "done" });
-  M.toast({ html: "Order marked done ✅", classes: "green" });
+  M.toast({ html: "Order marked as done ✅", classes: "green" });
 }
 
-// ✅ Load orders
+// ✅ Load orders from Firebase
 function loadOrders() {
   db.ref("orders").on("value", snapshot => {
     const orders = snapshot.val();
     ordersDiv.innerHTML = "";
-    let anyActive = false;
+    shownOrders.clear();
+
+    let hasActive = false;
 
     for (let id in orders) {
       const order = orders[id];
       if (order.status === "preparing") {
         renderOrder(id, order);
-        anyActive = true;
+        hasActive = true;
       }
     }
 
-    if (!anyActive) {
+    if (!hasActive) {
       ordersDiv.innerHTML = `<p class="center-align grey-text">No active orders 🎉</p>`;
     }
   });
@@ -104,38 +109,50 @@ function loadOrders() {
   });
 }
 
-// ✅ Ask for Push Notification Permission
+// ✅ Set up push notifications
 function setupPushNotifications() {
-  Notification.requestPermission().then(permission => {
-    if (permission === "granted") {
-      messaging.getToken({
-        vapidKey: "BDMAO8BavZJ8Xxv266sTYU4XUD8bil5MlG_XksOJ5u9TvvGemV0fYigYrpDynb7OUnmMBjTR053DUsV3J2YYyG4" // Set this from Firebase Project Settings > Cloud Messaging
-      }).then((currentToken) => {
-        if (currentToken) {
-          console.log("✅ FCM Token:", currentToken);
-          // You can store the token in your database for admin broadcast
-        } else {
-          console.warn("❌ No registration token available");
-        }
-      }).catch(err => {
-        console.error("Token error:", err);
-      });
-    } else {
-      console.warn("🔕 Notification permission denied");
-    }
-  });
+  if ('serviceWorker' in navigator && 'Notification' in window) {
+    Notification.requestPermission().then(permission => {
+      if (permission === "granted") {
+        navigator.serviceWorker.register("firebase-messaging-sw.js")
+          .then(registration => {
+            console.log("✅ Service worker registered");
+
+            messaging.getToken({
+              vapidKey: "BDMAO8BavZJ8Xxv266sTYU4XUD8bil5MlG_XksOJ5u9TvvGemV0fYigYrpDynb7OUnmMBjTR053DUsV3J2YYyG4",
+              serviceWorkerRegistration: registration
+            }).then(token => {
+              if (token) {
+                console.log("✅ FCM Token:", token);
+                // Save to DB if needed
+              } else {
+                console.warn("❌ No registration token available");
+              }
+            }).catch(err => {
+              console.error("❌ Token error:", err);
+            });
+
+          }).catch(err => {
+            console.error("❌ Service worker registration failed:", err);
+          });
+      } else {
+        console.warn("🔕 Notifications blocked by user");
+      }
+    });
+  }
 }
 
-// ✅ Receive FCM messages when app is in foreground
+// ✅ Receive FCM foreground messages
 messaging.onMessage(payload => {
-  console.log("📨 Push Received", payload);
-  new Notification(payload.notification.title, {
-    body: payload.notification.body,
-    icon: payload.notification.icon || "logo.png"
+  console.log("📨 Push Received:", payload);
+  const { title, body, icon } = payload.notification;
+  new Notification(title, {
+    body,
+    icon: icon || "logo.png"
   });
 });
 
-// ✅ Init on load
+// ✅ Init on page load
 window.onload = function () {
   loadOrders();
   setupPushNotifications();
