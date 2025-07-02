@@ -9,18 +9,18 @@ const firebaseConfig = {
   appId: "1:433558050592:web:169b277e2337931475e945"
 };
 
+// ✅ Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const messaging = firebase.messaging();
 
 // ✅ DOM Elements
 const ordersDiv = document.getElementById("orders");
 const kitchenSound = document.getElementById("kitchenSound");
 
-// ✅ Track shown orders
+// ✅ Track shown orders to avoid duplicates
 const shownOrders = new Set();
 
-// ✅ Render new order
+// ✅ Render an order card
 function renderOrder(orderId, orderData) {
   if (shownOrders.has(orderId)) return;
 
@@ -47,10 +47,10 @@ function renderOrder(orderId, orderData) {
   ordersDiv.appendChild(card);
   shownOrders.add(orderId);
 
-  // 🔊 Sound
-  kitchenSound.play().catch(() => console.warn("Autoplay blocked"));
+  // 🔊 Play kitchen alert sound
+  kitchenSound.play().catch(() => console.warn("🔇 Autoplay blocked"));
 
-  // 🔔 In-browser Notification
+  // 🔔 Trigger browser notification
   if (Notification.permission === "granted") {
     new Notification("🍕 New Order!", {
       body: `Table ${orderData.table} placed an order.`,
@@ -59,7 +59,7 @@ function renderOrder(orderId, orderData) {
   }
 }
 
-// ✅ Mark as done
+// ✅ Mark order as done
 function markAsDone(orderId) {
   const card = document.getElementById(`order-${orderId}`);
   if (card) {
@@ -71,7 +71,7 @@ function markAsDone(orderId) {
   M.toast({ html: "Order marked as done ✅", classes: "green" });
 }
 
-// ✅ Load orders
+// ✅ Load and listen for orders
 function loadOrders() {
   db.ref("orders").on("value", snapshot => {
     const orders = snapshot.val();
@@ -107,45 +107,17 @@ function loadOrders() {
   });
 }
 
-// ✅ Setup Push Notifications
-function setupPushNotifications() {
-  Notification.requestPermission().then(permission => {
-    if (permission === "granted") {
-      navigator.serviceWorker.register("firebase-messaging-sw.js")
-        .then(reg => {
-          console.log("✅ Service worker registered", reg);
-
-          // ✅ Get FCM Token
-          messaging.getToken({
-            vapidKey: "BDMAO8BavZJ8Xxv266sTYU4XUD8bil5MlG_XksOJ5u9TvvGemV0fYigYrpDynb7OUnmMBjTR053DUsV3J2YYyG4",
-            serviceWorkerRegistration: reg
-          }).then(token => {
-            console.log("✅ FCM Token:", token);
-          }).catch(err => {
-            console.error("❌ Token error:", err);
-          });
-        })
-        .catch(err => {
-          console.error("❌ Service worker registration failed:", err);
-        });
-    } else {
-      console.warn("🔕 Notifications permission not granted.");
-    }
-  });
+// ✅ Ask notification permission
+function requestNotificationPermission() {
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission().then(permission => {
+      console.log("🔔 Notification permission:", permission);
+    });
+  }
 }
 
-// ✅ Foreground Push (optional FCM broadcast)
-messaging.onMessage(payload => {
-  console.log("📨 Push Received:", payload);
-  const { title, body, icon } = payload.notification;
-  new Notification(title, {
-    body,
-    icon: icon || "logo.png"
-  });
-});
-
-// ✅ On Page Load
+// ✅ Init on page load
 window.onload = function () {
   loadOrders();
-  setupPushNotifications();
+  requestNotificationPermission();
 };

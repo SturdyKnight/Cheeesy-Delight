@@ -118,9 +118,10 @@ function showStatus(msg) {
   status.classList.add('fade-in');
 }
 
-// ✅ Order Placement
+// ✅ Order Placement with OneSignal
 function orderNow() {
   if (cart.length === 0) return;
+
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const prev = snapshot.val();
     const allItems = prev ? [...prev.items, ...cart] : [...cart];
@@ -134,6 +135,8 @@ function orderNow() {
     });
     const finalItems = Object.values(merged);
     const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+    // ✅ Save order to DB
     db.ref('orders/' + sessionId).set({
       orderId: sessionId,
       name: customerName,
@@ -144,8 +147,24 @@ function orderNow() {
       status: 'preparing'
     });
 
-    // ✅ Trigger kitchen sound (only for kitchen.js)
-    localStorage.setItem("last_order_sound", sessionId);
+    // ✅ Send OneSignal Notification to Kitchen
+    fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Basic os_v2_app_5zopwpsvgzawbkbck6gmqhjh5o4zfvm6xgvunc4ee4l6gljp5zx4wfnpid2qhq2i56krh52mzoyvnlcx2eccyuruet3hltd5rwy72wq"
+      },
+      body: JSON.stringify({
+        app_id: "ee5cfb3e-5536-4160-a822-578cc81d27eb",
+        included_segments: ["Subscribed Users"],
+        headings: { en: "🍽️ New Order from Table " + tableNumber },
+        contents: { en: `${customerName} placed an order.` },
+        url: "https://sturdyknight.github.io/kitchen.html",
+        chrome_web_icon: "https://sturdyknight.github.io/logo.png"
+      })
+    }).then(res => res.json())
+      .then(data => console.log("✅ Notification sent", data))
+      .catch(err => console.error("❌ OneSignal error", err));
 
     cart = [];
     updateCart();
@@ -200,7 +219,7 @@ function checkout() {
   });
 }
 
-// ✅ State Persistence
+// ✅ Load Previous Order
 function loadPreviousOrder() {
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
@@ -211,7 +230,7 @@ function loadPreviousOrder() {
   });
 }
 
-// ✅ Listen for Kitchen Done
+// ✅ Watch Order Completion
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
@@ -221,7 +240,6 @@ function listenForKitchenUpdate() {
       document.getElementById('order-btn').disabled = true;
       showToast("🍽 Order marked as done");
 
-      // ✅ Play user notification sound
       userAudio.play().catch(e => console.warn('Autoplay blocked'));
     } else {
       document.getElementById('checkout-btn').disabled = true;

@@ -1,21 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kitchen Panel - Cheeesy Delight</title>
-
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="logo.png" />
-
-  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
-
-  <!-- Materialize CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
 
-  <!-- Styles -->
+  <!-- OneSignal SDK -->
+  <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
+  <script>
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function () {
+      OneSignal.init({
+        appId: "ee5cfb3e-5536-4160-a822-578cc81d27eb",
+        notifyButton: { enable: true },
+        allowLocalhostAsSecureOrigin: true,
+        promptOptions: {
+          slidedown: {
+            enabled: true,
+            actionMessage: "Enable kitchen notifications for new orders!",
+            acceptButtonText: "Yes",
+            cancelButtonText: "No"
+          }
+        }
+      });
+
+      OneSignal.on('notificationClick', function () {
+        window.location.href = "https://sturdyknight.github.io/kitchen.html";
+      });
+    });
+  </script>
+
   <style>
     body {
       font-family: 'Inter', sans-serif;
@@ -23,12 +40,10 @@
       margin: 0;
       padding: 20px;
     }
-
     .container {
       max-width: 700px;
       margin: 0 auto;
     }
-
     .order-card {
       background: white;
       padding: 20px;
@@ -37,15 +52,12 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
       transition: opacity 0.5s ease;
     }
-
     .order-card.fade-out {
       opacity: 0;
     }
-
     button {
       margin-top: 10px;
     }
-
     .center-align.grey-text {
       margin-top: 40px;
       font-size: 18px;
@@ -61,16 +73,9 @@
 
   <audio id="kitchenSound" src="kitchen.mp3" preload="auto"></audio>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-messaging-compat.js"></script>
-
-  <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-
-  <!-- Kitchen JS -->
   <script src="kitchen.js" defer></script>
 </body>
-
 </html>
