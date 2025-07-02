@@ -4,11 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Kitchen Panel - Cheeesy Delight</title>
+
+  <!-- Favicon & Fonts -->
   <link rel="icon" type="image/png" href="logo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" />
 
-  <!-- OneSignal SDK -->
+  <!-- ✅ OneSignal SDK -->
   <script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async></script>
   <script>
     window.OneSignal = window.OneSignal || [];
@@ -27,10 +29,19 @@
         }
       });
 
+      // ✅ When notification is clicked, redirect to kitchen.html
       OneSignal.on('notificationClick', function () {
         window.location.href = "https://sturdyknight.github.io/kitchen.html";
       });
     });
+  </script>
+
+  <!-- ✅ Error Logger (for mobile blank screen debug) -->
+  <script>
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
+      alert("⚠️ Error: " + msg + "\nLine: " + lineNo);
+      return false;
+    };
   </script>
 
   <style>
@@ -71,11 +82,27 @@
     <div id="orders"></div>
   </div>
 
-  <audio id="kitchenSound" src="kitchen.mp3" preload="auto"></audio>
+  <!-- 🔊 Kitchen Alert Sound -->
+  <audio id="kitchenSound" src="kitchen.mp3" preload="auto" muted playsinline></audio>
 
+  <!-- ✅ Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <!-- ✅ Materialize -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+  <!-- ✅ Kitchen Logic -->
   <script src="kitchen.js" defer></script>
+
+  <!-- ✅ Unmute Audio on First Touch (for mobile) -->
+  <script>
+    document.addEventListener('click', () => {
+      const audio = document.getElementById('kitchenSound');
+      if (audio) {
+        audio.muted = false;
+      }
+    }, { once: true });
+  </script>
 </body>
 </html>
