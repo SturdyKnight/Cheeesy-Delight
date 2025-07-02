@@ -6,24 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Cheeesy Delight - Menu</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" type="image/png" href="logo.png">
-  <!-- 👇 Google Fonts -->
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap"
-    rel="stylesheet">
+  <link rel="icon" type="image/png" href="logo.png" />
 
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
+
+  <!-- Redirect if session tampered -->
   <script>
     const urlSession = new URLSearchParams(window.location.search).get('session');
     const localSession = localStorage.getItem('cheesy_sessionId');
-
-    // 🚫 Redirect if tampered or session expired
     if (!urlSession || urlSession !== localSession) {
       alert("⚠️ Your session has expired or is invalid. Please start your order again.");
       window.location.href = "index.html";
     }
   </script>
 
-
+  <!-- html2canvas + jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -31,53 +29,106 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <!-- JS -->
+  <!-- Your Script -->
   <script defer src="script.js"></script>
+
+  <!-- Loader Styling -->
+  <style>
+    #loader {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    #menu-main {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .fade-in {
+      display: block !important;
+      opacity: 1 !important;
+    }
+
+    .cooking-text {
+      font-family: 'Pacifico', cursive;
+      font-size: 22px;
+      margin-top: 10px;
+      color: #ff5722;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="logo-wrapper">
-      <img src="logo.png" alt="Cheeesy Delight Logo" class="logo" />
-    </div>
-    
-    <div id="menu-section">
-      <h2>Starters</h2>
-      <div class="menu-category" id="starters"></div>
-
-      <h2>Main Course</h2>
-      <div class="menu-category" id="main-course"></div>
-
-      <h2>Desserts</h2>
-      <div class="menu-category" id="desserts"></div>
-
-      <h2>Drinks</h2>
-      <div class="menu-category" id="drinks"></div>
-    </div>
-
-    <div id="cart">
-      <h2>Your Order</h2>
-      <ul id="cart-items"></ul>
-      <p>Total: ₹<span id="total">0</span></p>
-
-      <div class="cart-actions">
-        <button id="order-btn" disabled>🛎️ Order</button>
-        <button id="checkout-btn" disabled>✅ Checkout</button>
-      </div>
-
-      <p id="order-status" class="hidden"></p>
-    </div>
-
-    <div id="receipt-preview" style="display: none; position: relative; width: 384px; height: 576px;">
-      <div id="receipt-content"
-        style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4; z-index: 1;">
-        <!-- Receipt text will be injected here -->
-      </div>
-    </div>
-
+  <!-- 🍳 Cooking Loader -->
+  <div id="loader">
+    <img src="cooking.gif" alt="Cooking..." width="120" />
+    <div class="cooking-text">Preparing your delicious menu!</div>
   </div>
-  <div id="footer-container"></div>
+
+  <!-- 🍽️ Main Menu Section -->
+  <div id="menu-main">
+    <div class="container">
+      <div class="logo-wrapper">
+        <img src="logo.png" alt="Cheeesy Delight Logo" class="logo" />
+      </div>
+
+      <div id="menu-section">
+        <h2>Starters</h2>
+        <div class="menu-category" id="starters"></div>
+
+        <h2>Main Course</h2>
+        <div class="menu-category" id="main-course"></div>
+
+        <h2>Desserts</h2>
+        <div class="menu-category" id="desserts"></div>
+
+        <h2>Drinks</h2>
+        <div class="menu-category" id="drinks"></div>
+      </div>
+
+      <div id="cart">
+        <h2>Your Order</h2>
+        <ul id="cart-items"></ul>
+        <p>Total: ₹<span id="total">0</span></p>
+
+        <div class="cart-actions">
+          <button id="order-btn" disabled>🛎️ Order</button>
+          <button id="checkout-btn" disabled>🧾 Finalize Bill</button>
+        </div>
+
+        <p id="order-status" class="hidden"></p>
+      </div>
+
+      <div id="receipt-preview" style="display: none; position: relative; width: 384px; height: 576px;">
+        <div id="receipt-content"
+          style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4; z-index: 1;">
+          <!-- Receipt text will be injected here -->
+        </div>
+      </div>
+    </div>
+    <div id="footer-container"></div>
+  </div>
+
+  <!-- Footer Loader -->
   <script src="footer.js"></script>
+
+  <!-- Loader to Menu Transition Script -->
+  <script>
+    window.addEventListener('load', () => {
+      const loader = document.getElementById('loader');
+      const menu = document.getElementById('menu-main');
+
+      // Optional: Simulated wait or wait for menu load logic
+      setTimeout(() => {
+        loader.style.display = "none";
+        menu.classList.add("fade-in");
+      }, 1000); // Adjust as needed
+    });
+  </script>
 </body>
 
 </html>
