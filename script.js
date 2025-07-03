@@ -26,6 +26,12 @@ function showToast(message) {
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.innerText = message;
+  toast.style.cssText = `
+    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 14px; z-index: 9999;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2); transition: opacity 0.3s ease;
+  `;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
@@ -77,13 +83,7 @@ function loadMenu() {
 function addToCart(id, name, price) {
   const item = cart.find(i => i.id === id);
   if (!item) {
-    cart.push({
-      id,
-      name,
-      price,
-      qty: 1,
-      addedAt: new Date().toISOString()
-    });
+    cart.push({ id, name, price, qty: 1, addedAt: new Date().toISOString() });
     showToast(`✅ 1 ${name} added`);
   }
   updateCart();
@@ -124,16 +124,13 @@ function showStatus(msg) {
   status.classList.add('fade-in');
 }
 
-//order now 
-
+// ✅ Order Submission
 function orderNow() {
   if (cart.length === 0) return;
 
-  // ✅ Fetch menu data first to determine category for each item
   db.ref('menu').once('value').then(menuSnap => {
     const menuData = menuSnap.val();
 
-    // ✅ Add category to each item in cart
     const cartWithCategory = cart.map(item => {
       let category = null;
       for (let cat in menuData) {
@@ -142,13 +139,9 @@ function orderNow() {
           break;
         }
       }
-      return {
-        ...item,
-        category: category || 'unknown'
-      };
+      return { ...item, category: category || 'unknown' };
     });
 
-    // ✅ Merge with previous order if exists
     db.ref('orders/' + sessionId).once('value').then(snapshot => {
       const prev = snapshot.val();
       const allItems = prev ? [...prev.items, ...cartWithCategory] : [...cartWithCategory];
@@ -166,7 +159,6 @@ function orderNow() {
       const finalItems = Object.values(merged);
       const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-      // ✅ Save full order to DB
       db.ref('orders/' + sessionId).set({
         orderId: sessionId,
         name: customerName,
@@ -177,14 +169,12 @@ function orderNow() {
         status: 'preparing'
       });
 
-      // ✅ Track only newly added items
       db.ref('orders/' + sessionId + '/updates').push({
         timestamp: new Date().toISOString(),
         added: [...cartWithCategory],
         total: newTotal
       });
 
-      // ✅ OneSignal Notification
       fetch("https://onesignal.com/api/v1/notifications", {
         method: "POST",
         headers: {
@@ -201,7 +191,6 @@ function orderNow() {
         })
       });
 
-      // ✅ UI + Audio + Reset
       cart = [];
       updateCart();
       loadMenu();
@@ -211,7 +200,7 @@ function orderNow() {
   });
 }
 
-// ✅ Checkout
+// ✅ Checkout + PDF
 function checkout() {
   if (!sessionId) return;
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
@@ -236,6 +225,8 @@ function checkout() {
       document.body.appendChild(receiptDiv);
       receiptDiv.innerText = receipt;
 
+      showToast("⬇️ Downloading your receipt...");
+
       html2canvas(receiptDiv).then(canvas => {
         const imgData = canvas.toDataURL('image/png');
         const { jsPDF } = window.jspdf;
@@ -243,12 +234,14 @@ function checkout() {
         pdf.addImage(imgData, 'PNG', 5, 5, 250, 360);
         pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
         document.body.removeChild(receiptDiv);
-        localStorage.removeItem('cheesy_sessionId');
-        localStorage.removeItem('cheesy_name');
-        localStorage.removeItem('cheesy_table');
-        showToast("✅ Receipt downloaded");
 
-        setTimeout(() => window.location.href = "index.html", 2000);
+        // 🔐 Delayed cleanup after download completes
+        setTimeout(() => {
+          localStorage.removeItem('cheesy_sessionId');
+          localStorage.removeItem('cheesy_name');
+          localStorage.removeItem('cheesy_table');
+          window.location.href = "index.html";
+        }, 3200);
       });
     } else {
       showStatus("⏳ Please wait, your order is still being prepared.");
@@ -257,7 +250,7 @@ function checkout() {
   });
 }
 
-// ✅ Load Previous Order
+// ✅ Load Previous + Listen for Kitchen Update
 function loadPreviousOrder() {
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
@@ -268,7 +261,6 @@ function loadPreviousOrder() {
   });
 }
 
-// ✅ Listen for Kitchen Update
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
