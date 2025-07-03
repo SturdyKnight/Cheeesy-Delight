@@ -17,13 +17,8 @@ const db = firebase.database();
 const ordersDiv = document.getElementById("orders");
 const kitchenSound = document.getElementById("kitchenSound");
 
-// ✅ Track shown orders to avoid duplicates
-const shownOrders = new Set();
-
-// ✅ Render an order card
-function renderOrder(orderId, orderData) {
-  if (shownOrders.has(orderId)) return;
-
+// ✅ Render a single order card
+function renderOrder(orderId, orderData, latestUpdate = null) {
   const card = document.createElement("div");
   card.className = "order-card";
   card.id = `order-${orderId}`;
@@ -32,11 +27,24 @@ function renderOrder(orderId, orderData) {
     item => `<li>${item.name} × ${item.qty} - ₹${item.price * item.qty}</li>`
   ).join("");
 
+  let updatesHTML = '';
+  if (latestUpdate && latestUpdate.added?.length > 0) {
+    updatesHTML = `
+      <div style="margin-top: 10px;">
+        <strong style="color: green;">🆕 New Items in This Update:</strong>
+        <ul>
+          ${latestUpdate.added.map(item => `<li>${item.name} × ${item.qty}</li>`).join("")}
+        </ul>
+      </div>
+    `;
+  }
+
   card.innerHTML = `
     <h5>Order #${orderId}</h5>
     <p><strong>Name:</strong> ${orderData.name}</p>
     <p><strong>Table:</strong> ${orderData.table}</p>
     <ul>${itemsHTML}</ul>
+    ${updatesHTML}
     <p><strong>Total:</strong> ₹${orderData.total}</p>
     <p><strong>Time:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
     <button class="btn waves-effect waves-light orange darken-2" onclick="markAsDone('${orderId}')">
@@ -45,7 +53,6 @@ function renderOrder(orderId, orderData) {
   `;
 
   ordersDiv.appendChild(card);
-  shownOrders.add(orderId);
 
   // 🔊 Play kitchen alert sound
   kitchenSound.play().catch(() => console.warn("🔇 Autoplay blocked"));
@@ -76,27 +83,41 @@ function loadOrders() {
   db.ref("orders").on("value", snapshot => {
     const orders = snapshot.val();
     ordersDiv.innerHTML = "";
-    shownOrders.clear();
 
-    let hasActive = false;
-
-    for (let id in orders) {
-      const order = orders[id];
-      if (order.status === "preparing") {
-        renderOrder(id, order);
-        hasActive = true;
-      }
-    }
-
-    if (!hasActive) {
+    if (!orders) {
       ordersDiv.innerHTML = `<p class="center-align grey-text">No active orders 🎉</p>`;
+      return;
     }
+
+    const activeOrders = Object.entries(orders)
+      .filter(([_, data]) => data.status === "preparing")
+      .sort(([, a], [, b]) => new Date(a.timestamp) - new Date(b.timestamp)); // Sort by timestamp
+
+    if (activeOrders.length === 0) {
+      ordersDiv.innerHTML = `<p class="center-align grey-text">No active orders 🎉</p>`;
+      return;
+    }
+
+    activeOrders.forEach(([orderId, orderData]) => {
+      db.ref(`orders/${orderId}/updates`)
+        .orderByKey()
+        .limitToLast(1)
+        .once("value", updateSnap => {
+          const updates = updateSnap.val();
+          let latestUpdate = null;
+          if (updates) {
+            const key = Object.keys(updates)[0];
+            latestUpdate = updates[key];
+          }
+          renderOrder(orderId, orderData, latestUpdate);
+        });
+    });
   });
 
+  // ✅ Auto-remove done orders visually
   db.ref("orders").on("child_changed", snapshot => {
     const id = snapshot.key;
     const order = snapshot.val();
-
     if (order.status === "done") {
       const card = document.getElementById(`order-${id}`);
       if (card) {

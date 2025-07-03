@@ -77,7 +77,13 @@ function loadMenu() {
 function addToCart(id, name, price) {
   const item = cart.find(i => i.id === id);
   if (!item) {
-    cart.push({ id, name, price, qty: 1 });
+    cart.push({
+      id,
+      name,
+      price,
+      qty: 1,
+      addedAt: new Date().toISOString()
+    });
     showToast(`✅ 1 ${name} added`);
   }
   updateCart();
@@ -118,13 +124,18 @@ function showStatus(msg) {
   status.classList.add('fade-in');
 }
 
-// ✅ Order Placement with OneSignal
+//order now 
+
 function orderNow() {
   if (cart.length === 0) return;
+
+  const now = new Date().toISOString();
 
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const prev = snapshot.val();
     const allItems = prev ? [...prev.items, ...cart] : [...cart];
+
+    // ✅ Merge quantities
     const merged = {};
     allItems.forEach(item => {
       if (!merged[item.id]) {
@@ -133,21 +144,29 @@ function orderNow() {
         merged[item.id].qty += item.qty;
       }
     });
+
     const finalItems = Object.values(merged);
     const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-    // ✅ Save order to DB
-    db.ref('orders/' + sessionId).set({
+    // ✅ Update the full order with all merged items
+    db.ref('orders/' + sessionId).update({
       orderId: sessionId,
       name: customerName,
       table: tableNumber,
       items: finalItems,
       total: newTotal,
-      timestamp: new Date().toISOString(),
+      timestamp: now,
       status: 'preparing'
     });
 
-    // ✅ Send OneSignal Notification to Kitchen
+    // ✅ Push only the new items (cart) into updates
+    db.ref('orders/' + sessionId + '/updates').push({
+      timestamp: now,
+      added: JSON.parse(JSON.stringify(cart)),
+      total: newTotal
+    });
+
+    // ✅ Send notification to kitchen
     fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
@@ -172,6 +191,7 @@ function orderNow() {
     showToast("🧾 Order sent to kitchen");
   });
 }
+
 
 // ✅ Checkout
 function checkout() {
@@ -230,7 +250,7 @@ function loadPreviousOrder() {
   });
 }
 
-// ✅ Watch Order Completion
+// ✅ Listen for Kitchen Update
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
