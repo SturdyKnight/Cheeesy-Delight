@@ -4,53 +4,269 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Owner Dashboard - Cheeesy Delight</title>
-  <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png">
-  <!-- 👇 Google Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
-  <style>
-    body {
-      padding: 20px;
-      font-family: 'Segoe UI', sans-serif;
-    }
-    table {
-      margin-top: 20px;
-    }
-    th, td {
-      font-size: 14px;
-    }
-    #total-sales {
-      font-weight: bold;
-      margin-top: 20px;
-    }
-  </style>
-</head>
-<body>
-  <h4>📊 Cheeesy Delight - Owner Panel</h4>
+  
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/sunscreen" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <table class="highlight responsive-table">
-    <thead>
-      <tr>
-        <th>Order ID</th>
-        <th>Name</th>
-        <th>Table</th>
-        <th>Status</th>
-        <th>Items</th>
-        <th>Total (₹)</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody id="orders-table-body"></tbody>
-  </table>
-
-  <div id="total-sales">Total Sales: ₹0</div>
-
-  <!-- Firebase + Script -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+  <!-- Styles -->
+  <style>
+:root {
+  --primary: #ff7043;
+  --bg: #f9f9f9;
+  --text: #333;
+  --muted: #666;
+  --card-radius: 12px;
+  --font-main: 'Inter', sans-serif;
+  --shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-main);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+header {
+  background-color: var(--primary);
+  color: white;
+  padding: 18px 20px;
+  font-size: 1.5rem;
+  font-family: 'Pacifico', cursive;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+nav button {
+  background: none;
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-left: 14px;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 5px;
+  transition: background 0.2s ease;
+}
+
+nav button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.tab-content {
+  display: none;
+  padding: 20px;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  background: white;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: var(--card-radius);
+}
+
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+th {
+  background: #f0f0f0;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+.status.done {
+  color: green;
+  font-weight: 600;
+}
+
+.status.preparing {
+  color: orange;
+  font-weight: 600;
+}
+
+.card {
+  background: white;
+  padding: 16px 20px;
+  border-radius: var(--card-radius);
+  margin-top: 20px;
+  box-shadow: var(--shadow);
+}
+
+canvas {
+  width: 100% !important;
+  height: auto !important;
+  margin-top: 16px;
+}
+
+/* Total Sales Highlight */
+#total-sales {
+  background: white;
+  padding: 14px;
+  margin-top: 20px;
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow);
+  font-weight: 600;
+}
+
+/* Floating Button */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 56px;
+  height: 56px;
+  font-size: 28px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.fab:hover {
+  transform: scale(1.05);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 🔍 Responsive for mobile */
+@media (max-width: 768px) {
+  header {
+    flex-direction: column;
+    align-items: flex-start;
+    font-size: 1.3rem;
+  }
+
+  nav {
+    margin-top: 10px;
+  }
+
+  nav button {
+    font-size: 0.95rem;
+    margin: 4px 6px 0 0;
+  }
+
+  table, th, td {
+    font-size: 13px;
+  }
+
+  .card h6 {
+    font-size: 15px;
+    margin-bottom: 6px;
+  }
+
+  #total-sales {
+    font-size: 14px;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+  <!-- ✅ Header & Tabs -->
+<!-- ✅ Header & Tabs -->
+<header style="font-family: var(--font-main); font-weight: 600;">
+  Cheeesy Delight
+  <nav>
+    <button onclick="showTab('orders')">📋 Orders</button>
+    <button onclick="showTab('stats')">📊 Stats</button>
+  </nav>
+</header>
+
+
+  <!-- ✅ Orders Tab -->
+  <div class="tab-content active" id="orders">
+    <h5>All Orders</h5>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Name</th>
+            <th>Table</th>
+            <th>Status</th>
+            <th>Items</th>
+            <th>Total (₹)</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody id="orders-table-body"></tbody>
+      </table>
+    </div>
+    <div id="total-sales" style="margin-top: 18px; font-weight: 600;">Total Sales: ₹0</div>
+  </div>
+
+  <!-- ✅ Stats Tab -->
+  <div class="tab-content" id="stats">
+    <h5>Sales Overview</h5>
+
+    <!-- ✅ Category-wise Pie Chart -->
+    <div class="card">
+      <h6>Sales by Category</h6>
+      <canvas id="categoryPieChart"></canvas>
+    </div>
+
+    <!-- ✅ Revenue and Orders Graph -->
+    <div class="card">
+      <h6>Monthly Revenue</h6>
+      <canvas id="salesChart"></canvas>
+    </div>
+    <div class="card">
+      <h6>Orders per Month</h6>
+      <canvas id="ordersChart"></canvas>
+    </div>
+  </div>
+
+
+  <!-- ✅ Scripts -->
   <script src="owner.js"></script>
-  <div id="footer-container"></div>
-  <script src="footer.js"></script>
+  <script src="dashboard-charts.js"></script>
+
+  <!-- ✅ Tab Toggle -->
+  <script>
+    function showTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+  </script>
 </body>
 </html>
