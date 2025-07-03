@@ -129,66 +129,87 @@ function showStatus(msg) {
 function orderNow() {
   if (cart.length === 0) return;
 
-  db.ref('orders/' + sessionId).once('value').then(snapshot => {
-    const prev = snapshot.val();
-    const allItems = prev ? [...prev.items, ...cart] : [...cart];
-    const merged = {};
-    allItems.forEach(item => {
-      if (!merged[item.id]) {
-        merged[item.id] = { ...item };
-      } else {
-        merged[item.id].qty += item.qty;
+  // ✅ Fetch menu data first to determine category for each item
+  db.ref('menu').once('value').then(menuSnap => {
+    const menuData = menuSnap.val();
+
+    // ✅ Add category to each item in cart
+    const cartWithCategory = cart.map(item => {
+      let category = null;
+      for (let cat in menuData) {
+        if (menuData[cat] && Object.values(menuData[cat]).some(m => m.name === item.name)) {
+          category = cat;
+          break;
+        }
       }
-    });
-    const finalItems = Object.values(merged);
-    const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-
-    // ✅ Save full order to DB
-    db.ref('orders/' + sessionId).set({
-      orderId: sessionId,
-      name: customerName,
-      table: tableNumber,
-      items: finalItems,
-      total: newTotal,
-      timestamp: new Date().toISOString(),
-      status: 'preparing'
+      return {
+        ...item,
+        category: category || 'unknown'
+      };
     });
 
-    // ✅ Track newly added items only
-    db.ref('orders/' + sessionId + '/updates').push({
-      timestamp: new Date().toISOString(),
-      added: [...cart],
-      total: newTotal
+    // ✅ Merge with previous order if exists
+    db.ref('orders/' + sessionId).once('value').then(snapshot => {
+      const prev = snapshot.val();
+      const allItems = prev ? [...prev.items, ...cartWithCategory] : [...cartWithCategory];
+      const merged = {};
+
+      allItems.forEach(item => {
+        const key = `${item.id}_${item.category}`;
+        if (!merged[key]) {
+          merged[key] = { ...item };
+        } else {
+          merged[key].qty += item.qty;
+        }
+      });
+
+      const finalItems = Object.values(merged);
+      const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+      // ✅ Save full order to DB
+      db.ref('orders/' + sessionId).set({
+        orderId: sessionId,
+        name: customerName,
+        table: tableNumber,
+        items: finalItems,
+        total: newTotal,
+        timestamp: new Date().toISOString(),
+        status: 'preparing'
+      });
+
+      // ✅ Track only newly added items
+      db.ref('orders/' + sessionId + '/updates').push({
+        timestamp: new Date().toISOString(),
+        added: [...cartWithCategory],
+        total: newTotal
+      });
+
+      // ✅ OneSignal Notification
+      fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Basic os_v2_app_5zopwpsvgzawbkbck6gmqhjh5o4zfvm6xgvunc4ee4l6gljp5zx4wfnpid2qhq2i56krh52mzoyvnlcx2eccyuruet3hltd5rwy72wq"
+        },
+        body: JSON.stringify({
+          app_id: "ee5cfb3e-5536-4160-a822-578cc81d27eb",
+          included_segments: ["Subscribed Users"],
+          headings: { en: "🍽️ New Order from Table " + tableNumber },
+          contents: { en: `${customerName} placed an order.` },
+          url: "https://sturdyknight.github.io/kitchen.html",
+          chrome_web_icon: "https://sturdyknight.github.io/logo.png"
+        })
+      });
+
+      // ✅ UI + Audio + Reset
+      cart = [];
+      updateCart();
+      loadMenu();
+      showStatus("🧾 Order is added and being prepared.");
+      showToast("🧾 Order sent to kitchen");
     });
-
-    // ✅ Send OneSignal Notification
-    fetch("https://onesignal.com/api/v1/notifications", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Basic os_v2_app_5zopwpsvgzawbkbck6gmqhjh5o4zfvm6xgvunc4ee4l6gljp5zx4wfnpid2qhq2i56krh52mzoyvnlcx2eccyuruet3hltd5rwy72wq"
-      },
-      body: JSON.stringify({
-        app_id: "ee5cfb3e-5536-4160-a822-578cc81d27eb",
-        included_segments: ["Subscribed Users"],
-        headings: { en: "🍽️ New Order from Table " + tableNumber },
-        contents: { en: `${customerName} placed an order.` },
-        url: "https://sturdyknight.github.io/kitchen.html",
-        chrome_web_icon: "https://sturdyknight.github.io/logo.png"
-      })
-    }).then(res => res.json())
-      .then(data => console.log("✅ Notification sent", data))
-      .catch(err => console.error("❌ OneSignal error", err));
-
-    // ✅ RESET everything correctly
-    cart = [];
-    updateCart();     // update cart section
-    loadMenu();       // update + / - buttons back to "Add"
-    showStatus("🧾 Order is added and being prepared.");
-    showToast("🧾 Order sent to kitchen");
   });
 }
-
 
 // ✅ Checkout
 function checkout() {
