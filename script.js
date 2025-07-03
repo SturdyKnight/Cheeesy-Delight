@@ -129,13 +129,9 @@ function showStatus(msg) {
 function orderNow() {
   if (cart.length === 0) return;
 
-  const now = new Date().toISOString();
-
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const prev = snapshot.val();
     const allItems = prev ? [...prev.items, ...cart] : [...cart];
-
-    // ✅ Merge quantities
     const merged = {};
     allItems.forEach(item => {
       if (!merged[item.id]) {
@@ -144,29 +140,28 @@ function orderNow() {
         merged[item.id].qty += item.qty;
       }
     });
-
     const finalItems = Object.values(merged);
     const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-    // ✅ Update the full order with all merged items
-    db.ref('orders/' + sessionId).update({
+    // ✅ Save full order to DB
+    db.ref('orders/' + sessionId).set({
       orderId: sessionId,
       name: customerName,
       table: tableNumber,
       items: finalItems,
       total: newTotal,
-      timestamp: now,
+      timestamp: new Date().toISOString(),
       status: 'preparing'
     });
 
-    // ✅ Push only the new items (cart) into updates
+    // ✅ Track newly added items only
     db.ref('orders/' + sessionId + '/updates').push({
-      timestamp: now,
-      added: JSON.parse(JSON.stringify(cart)),
+      timestamp: new Date().toISOString(),
+      added: [...cart],
       total: newTotal
     });
 
-    // ✅ Send notification to kitchen
+    // ✅ Send OneSignal Notification
     fetch("https://onesignal.com/api/v1/notifications", {
       method: "POST",
       headers: {
@@ -185,8 +180,10 @@ function orderNow() {
       .then(data => console.log("✅ Notification sent", data))
       .catch(err => console.error("❌ OneSignal error", err));
 
+    // ✅ RESET everything correctly
     cart = [];
-    updateCart();
+    updateCart();     // update cart section
+    loadMenu();       // update + / - buttons back to "Add"
     showStatus("🧾 Order is added and being prepared.");
     showToast("🧾 Order sent to kitchen");
   });
