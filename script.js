@@ -50,14 +50,15 @@ function renderMenuItem(category, itemId, itemData) {
     <div class="menu-info">
       <p><strong>${itemData.name}</strong><br>₹${itemData.price}</p>
       <div id="qty-${itemId}">
-        ${qty === 0
-      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${itemData.name}', ${itemData.price})">Add</button>`
-      : `<div class="qty-controls">
+        ${
+          qty === 0
+            ? `<button class="add-btn" onclick="addToCart('${itemId}', '${itemData.name}', ${itemData.price})">Add</button>`
+            : `<div class="qty-controls">
                 <button onclick="updateQuantity('${itemId}', -1)">−</button>
                 <span>${qty}</span>
                 <button onclick="updateQuantity('${itemId}', 1)">+</button>
               </div>`
-    }
+        }
       </div>
     </div>`;
   document.getElementById(category).appendChild(itemDiv);
@@ -202,7 +203,6 @@ function orderNow() {
 // ✅ Checkout + PDF
 function checkout() {
   if (!sessionId) return;
-
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
     if (!order) return;
@@ -216,109 +216,39 @@ function checkout() {
       });
       receipt += `-----------------------------\nTOTAL: ₹${order.total}\n-----------------------------\n      Thank you! Visit again`;
 
-      const win = window.open('', '_blank');
-      win.document.write(`
-  <html>
-    <head>
-      <title>Cheesy Delight Receipt</title>
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-      <style>
-        html, body {
-          margin: 0;
-          padding: 0;
-          background: #fdfdfd;
-          font-family: 'Courier New', monospace;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .container {
-          max-width: 90vw;
-          width: 320px;
-          background: white;
-          padding: 20px;
-          border-radius: 8px;
-          box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-          text-align: center;
-          white-space: pre-wrap;
-        }
-        h3 {
-          margin: 0 0 10px 0;
-          font-size: 18px;
-        }
-        pre {
-          font-size: 13px;
-          text-align: left;
-          overflow-x: auto;
-        }
-        button {
-          margin-top: 20px;
-          background: #ff7043;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 6px;
-          font-size: 14px;
-          cursor: pointer;
-          width: 100%;
-        }
-        @media (max-width: 400px) {
-          .container {
-            width: 90vw;
-            padding: 16px;
-          }
-          pre {
-            font-size: 12px;
-          }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h3>🧾 Cheesy Delight Receipt</h3>
-        <pre>${receipt}</pre>
-        <button onclick="downloadPDF()">⬇️ Download PDF</button>
-      </div>
+      const receiptDiv = document.createElement('div');
+      receiptDiv.style.padding = '20px';
+      receiptDiv.style.fontFamily = 'monospace';
+      receiptDiv.style.whiteSpace = 'pre-wrap';
+      receiptDiv.style.fontSize = '12px';
+      receiptDiv.style.width = '250px';
+      document.body.appendChild(receiptDiv);
+      receiptDiv.innerText = receipt;
 
-      <script>
-        async function downloadPDF() {
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF({ unit: 'px', format: [260, 400] });
-          doc.setFont('courier');
-          doc.setFontSize(10);
-          const lines = \`${receipt}\`.split('\\n');
-          lines.forEach((line, i) => doc.text(line, 10, 20 + i * 14));
-          doc.save('Cheesy_Delight_Receipt_${sessionId}.pdf');
+      showToast("⬇️ Downloading your receipt...");
 
-          setTimeout(() => {
-            if (window.opener) {
-              window.opener.postMessage("clearSession", "*");
-            }
-          }, 500);
-        }
-      </script>
-    </body>
-  </html>
-`);
+      html2canvas(receiptDiv).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [260, 400] });
+        pdf.addImage(imgData, 'PNG', 5, 5, 250, 360);
+        pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
+        document.body.removeChild(receiptDiv);
+
+        // 🔐 Delayed cleanup after download completes
+        setTimeout(() => {
+          localStorage.removeItem('cheesy_sessionId');
+          localStorage.removeItem('cheesy_name');
+          localStorage.removeItem('cheesy_table');
+          window.location.href = "index.html";
+        }, 3200);
+      });
     } else {
       showStatus("⏳ Please wait, your order is still being prepared.");
       showToast("⌛ Not ready yet");
     }
   });
 }
-
-window.addEventListener("message", e => {
-  if (e.data === "clearSession") {
-    setTimeout(() => {
-      localStorage.removeItem('cheesy_sessionId');
-      localStorage.removeItem('cheesy_name');
-      localStorage.removeItem('cheesy_table');
-      window.location.href = "index.html";
-    }, 3500); // 3.5 seconds delay before redirect
-  }
-});
-
 
 // ✅ Load Previous + Listen for Kitchen Update
 function loadPreviousOrder() {
