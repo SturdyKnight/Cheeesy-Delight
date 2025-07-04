@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet" />
+
   <!-- Session Check -->
   <script>
     const urlSession = new URLSearchParams(window.location.search).get('session');
@@ -18,7 +19,7 @@
     }
   </script>
 
-  <!-- Firebase -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
@@ -26,10 +27,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- App Logic -->
+  <!-- App Logic (correct filename) -->
   <script defer src="script.js"></script>
 
-  <!-- Inline Styles -->
   <style>
     #loader {
       display: flex;
@@ -53,7 +53,6 @@
       margin-top: 10px;
       color: #ff5722;
     }
-    /* Back Warning */
     #backModal {
       display: none;
       position: fixed;
@@ -96,17 +95,7 @@
       </div>
 
       <div id="menu-section">
-        <h2>Starters</h2>
-        <div class="menu-category" id="starters"></div>
-
-        <h2>Main Course</h2>
-        <div class="menu-category" id="main-course"></div>
-
-        <h2>Desserts</h2>
-        <div class="menu-category" id="desserts"></div>
-
-        <h2>Drinks</h2>
-        <div class="menu-category" id="drinks"></div>
+        <!-- Menu categories will be injected by JS -->
       </div>
 
       <div id="cart">
@@ -118,8 +107,6 @@
           <button id="order-btn" disabled>🛎️ Order</button>
           <button id="checkout-btn" disabled>🧾 Download Bill</button>
         </div>
-
-        <p id="order-status" class="hidden"></p>
       </div>
 
       <div id="receipt-preview" style="display: none; width: 384px; height: 576px; position: relative;">
@@ -128,7 +115,7 @@
     </div>
   </div>
 
-  <!-- Nice Back Modal -->
+  <!-- Modal on back press -->
   <div id="backModal">
     <div class="modal-content">
       <h4>Please Stay!</h4>
@@ -137,21 +124,18 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <div id="footer-container"></div>
   <script src="footer.js"></script>
 
-  <!-- Loader + Back Prevention -->
   <script>
     window.addEventListener("load", () => {
       setTimeout(() => {
         document.getElementById("loader").style.display = "none";
         document.getElementById("menu-main").classList.add("fade-in");
-        history.pushState(null, "", location.href); // trap back
-      }, 1000);
+        history.pushState(null, "", location.href);
+      }, 2000);
     });
 
-    // 🚫 Prevent going back
     window.addEventListener("popstate", function () {
       showBackModal();
       history.pushState(null, "", location.href);
@@ -165,7 +149,6 @@
       document.getElementById("backModal").style.display = "none";
     }
 
-    // Optional: prevent accidental refresh
     window.addEventListener("beforeunload", function (e) {
       e.preventDefault();
       e.returnValue = "";

@@ -17,22 +17,16 @@ const customerName = localStorage.getItem('cheesy_name');
 const tableNumber = localStorage.getItem('cheesy_table');
 let cart = [];
 
-// ✅ Sound + Toast
-const userAudio = new Audio('user.mp3');
+// ✅ Toast
 function showToast(message) {
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.innerText = message;
-  toast.style.cssText = `
-    position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-    background: #333; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 14px; z-index: 9999;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2); transition: opacity 0.3s ease;
-  `;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ✅ Menu Renderer
+// ✅ Render Menu Item
 function renderMenuItem(category, itemId, itemData) {
   const section = document.getElementById(category);
   if (!section) return;
@@ -44,31 +38,122 @@ function renderMenuItem(category, itemId, itemData) {
   itemDiv.className = 'menu-item';
   itemDiv.id = `menu-${itemId}`;
 
-  const cartItem = cart.find(i => i.id === itemId);
-  const qty = cartItem ? cartItem.qty : 0;
+  let controlsHTML = '';
+
+if (itemData.type === 'pizza') {
+  const sizes = [
+    { label: '7"', suffix: '_7', price: itemData.size7 },
+    { label: '10"', suffix: '_10', price: itemData.size10 }
+  ];
+
+  const safeName = itemData.name.replace(/'/g, "\\'");
+
+  controlsHTML = sizes.map(size => {
+    const fullId = itemId + size.suffix;
+    const cartItem = cart.find(i => i.id === fullId);
+    const qty = cartItem ? cartItem.qty : 0;
+
+    return `
+      <div style="margin: 6px 0;">
+        <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
+        <div class="qty-controls">
+          <button onclick="updateQuantity('${fullId}', -1)">−</button>
+          <span>${qty}</span>
+          <button onclick="updateQuantity('${fullId}', 1, '${safeName}', ${size.price})">+</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+ else if (itemData.type === 'noodles') {
+    const sizes = [
+      { label: 'Half', suffix: '_half', price: itemData.half },
+      { label: 'Full', suffix: '_full', price: itemData.full }
+    ];
+
+    controlsHTML = sizes.map(size => {
+      const fullId = itemId + size.suffix;
+      const cartItem = cart.find(i => i.id === fullId);
+      const qty = cartItem ? cartItem.qty : 0;
+
+      return `
+        <div style="margin: 6px 0;">
+          <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
+          <div class="qty-controls">
+            <button onclick="updateQuantity('${fullId}', -1)">−</button>
+            <span>${qty}</span>
+            <button onclick="updateQuantity('${fullId}', 1, '${itemData.name} (${size.label})', ${size.price})">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } else {
+    const cartItem = cart.find(i => i.id === itemId);
+    const qty = cartItem ? cartItem.qty : 0;
+
+    controlsHTML = qty === 0
+      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${itemData.name}', ${itemData.price})">Add</button>`
+      : `<div class="qty-controls">
+           <button onclick="updateQuantity('${itemId}', -1)">−</button>
+           <span>${qty}</span>
+           <button onclick="updateQuantity('${itemId}', 1, '${itemData.name}', ${itemData.price})">+</button>
+         </div>`;
+  }
 
   itemDiv.innerHTML = `
     <div class="menu-image-box">
       <img src="${itemData.image || 'https://via.placeholder.com/100'}" alt="${itemData.name}" />
     </div>
     <div class="menu-info">
-      <p><strong>${itemData.name}</strong><br>₹${itemData.price}</p>
-      <div id="qty-${itemId}">
-        ${
-          qty === 0
-            ? `<button class="add-btn" onclick="addToCart('${itemId}', '${itemData.name}', ${itemData.price})">Add</button>`
-            : `<div class="qty-controls">
-                <button onclick="updateQuantity('${itemId}', -1)">−</button>
-                <span>${qty}</span>
-                <button onclick="updateQuantity('${itemId}', 1)">+</button>
-              </div>`
-        }
-      </div>
-    </div>`;
+      <p><strong>${itemData.name}</strong></p>
+      <div id="qty-${itemId}">${controlsHTML}</div>
+    </div>
+  `;
   section.appendChild(itemDiv);
 }
 
-// ✅ Load Menu with Fixed Category Order
+// ✅ Quantity Handling
+function addToCart(id, name, price) {
+  cart.push({ id, name, price, qty: 1 });
+  updateCart();
+  loadMenu();
+  showToast(`✅ 1 ${name} added`);
+}
+
+function updateQuantity(id, delta, name, price) {
+  const item = cart.find(i => i.id === id);
+  if (!item && delta > 0) {
+    cart.push({ id, name, price, qty: 1 });
+  } else if (item) {
+    item.qty += delta;
+    if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
+  }
+  updateCart();
+  loadMenu();
+}
+
+// ✅ Cart UI
+function updateCart() {
+  const cartItems = document.getElementById('cart-items');
+  const total = document.getElementById('total');
+  cartItems.innerHTML = '';
+  let sum = 0;
+
+  cart.forEach(item => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${item.name} × ${item.qty} - ₹${item.price * item.qty}
+      <button onclick="updateQuantity('${item.id}', -1)">×</button>
+    `;
+    cartItems.appendChild(li);
+    sum += item.price * item.qty;
+  });
+
+  total.textContent = sum;
+  document.getElementById('order-btn').disabled = cart.length === 0;
+}
+
+// ✅ Menu Loader
 function loadMenu() {
   const preferredOrder = ['starters', 'main-course', 'desserts', 'drinks'];
 
@@ -79,7 +164,6 @@ function loadMenu() {
     const menuSection = document.getElementById("menu-section");
     menuSection.innerHTML = "";
 
-    // Sorted Category Order: Preferred + New/Dynamic ones
     const allCategories = Object.keys(menu);
     const orderedCategories = [
       ...preferredOrder.filter(cat => allCategories.includes(cat)),
@@ -105,106 +189,44 @@ function loadMenu() {
   });
 }
 
-// ✅ Cart
-function addToCart(id, name, price) {
-  const exists = cart.find(i => i.id === id);
-  if (!exists) {
-    cart.push({ id, name, price, qty: 1, addedAt: new Date().toISOString() });
-    showToast(`✅ 1 ${name} added`);
-  }
-  updateCart();
-  loadMenu();
-}
-
-function updateQuantity(id, delta) {
-  const item = cart.find(i => i.id === id);
-  if (!item) return;
-  item.qty += delta;
-  if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
-  updateCart();
-  loadMenu();
-}
-
-function updateCart() {
-  const cartItems = document.getElementById('cart-items');
-  const total = document.getElementById('total');
-  cartItems.innerHTML = '';
-  let sum = 0;
-
-  cart.forEach(item => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      ${item.name} × ${item.qty} - ₹${item.price * item.qty}
-      <button onclick="updateQuantity('${item.id}', -1)">×</button>
-    `;
-    cartItems.appendChild(li);
-    sum += item.price * item.qty;
-  });
-
-  total.textContent = sum;
-  document.getElementById('order-btn').disabled = cart.length === 0;
-}
-
-// ✅ Order Status
-function showStatus(msg) {
-  const status = document.getElementById('order-status');
-  status.textContent = msg;
-  status.classList.remove('hidden');
-  status.classList.add('fade-in');
-}
-
 // ✅ Place Order
 function orderNow() {
   if (!cart.length) return;
 
-  db.ref('menu').once('value').then(menuSnap => {
-    const menuData = menuSnap.val();
-    const cartWithCategory = cart.map(item => {
-      let category = null;
-      for (let cat in menuData) {
-        if (Object.values(menuData[cat] || {}).some(m => m.name === item.name)) {
-          category = cat;
-          break;
-        }
-      }
-      return { ...item, category: category || 'unknown' };
+  db.ref('orders/' + sessionId).once('value').then(snapshot => {
+    const prev = snapshot.val();
+    const allItems = prev ? [...prev.items, ...cart] : [...cart];
+
+    const merged = {};
+    allItems.forEach(item => {
+      const key = item.id;
+      if (!merged[key]) merged[key] = { ...item };
+      else merged[key].qty += item.qty;
     });
 
-    db.ref('orders/' + sessionId).once('value').then(snapshot => {
-      const prev = snapshot.val();
-      const allItems = prev ? [...prev.items, ...cartWithCategory] : [...cartWithCategory];
-      const merged = {};
-      allItems.forEach(item => {
-        const key = `${item.id}_${item.category}`;
-        if (!merged[key]) merged[key] = { ...item };
-        else merged[key].qty += item.qty;
-      });
+    const finalItems = Object.values(merged);
+    const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
 
-      const finalItems = Object.values(merged);
-      const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
-
-      db.ref('orders/' + sessionId).set({
-        orderId: sessionId,
-        name: customerName,
-        table: tableNumber,
-        items: finalItems,
-        total: newTotal,
-        timestamp: new Date().toISOString(),
-        status: 'preparing'
-      });
-
-      db.ref(`orders/${sessionId}/updates`).push({
-        timestamp: new Date().toISOString(),
-        added: [...cartWithCategory],
-        total: newTotal
-      });
-
-      cart = [];
-      updateCart();
-      loadMenu();
-      showStatus("🧾 Order is added and being prepared.");
-      showToast("🧾 Order sent to kitchen");
+    db.ref('orders/' + sessionId).set({
+      orderId: sessionId,
+      name: customerName,
+      table: tableNumber,
+      items: finalItems,
+      total: newTotal,
+      timestamp: new Date().toISOString(),
+      status: 'preparing'
     });
+
+    db.ref(`orders/${sessionId}/updates`).push({
+      timestamp: new Date().toISOString(),
+      added: [...cart],
+      total: newTotal
+    });
+
+    cart = [];
+    updateCart();
+    loadMenu();
+    showToast("🧾 Order sent to kitchen");
   });
 }
 
@@ -213,8 +235,7 @@ function checkout() {
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
     if (!order || order.status !== 'done') {
-      showToast("⌛ Not ready yet");
-      showStatus("⏳ Please wait, your order is still being prepared.");
+      showToast("⌛ Order not ready yet");
       return;
     }
 
@@ -242,37 +263,21 @@ function checkout() {
       pdf.addImage(imgData, 'PNG', 5, 5, 250, 360);
       pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
       document.body.removeChild(receiptDiv);
-
-      setTimeout(() => {
-        localStorage.clear();
-        window.location.href = "index.html";
-      }, 3000);
+      localStorage.clear();
+      setTimeout(() => window.location.href = "index.html", 2000);
     });
   });
 }
 
-// ✅ Listen for Kitchen Update
+// ✅ Kitchen Update Listener
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
     if (order && order.status === 'done') {
-      showStatus("🍽 Your order is ready! You may now checkout.");
       document.getElementById('checkout-btn').disabled = false;
       document.getElementById('order-btn').disabled = true;
       showToast("🍽 Order marked as done");
-      userAudio.play().catch(() => {});
     } else {
-      document.getElementById('checkout-btn').disabled = true;
-    }
-  });
-}
-
-// ✅ Load Previous Order
-function loadPreviousOrder() {
-  db.ref('orders/' + sessionId).once('value').then(snapshot => {
-    const order = snapshot.val();
-    if (order && order.status !== 'done') {
-      showStatus("👋 Welcome back! Your order is being prepared.");
       document.getElementById('checkout-btn').disabled = true;
     }
   });
@@ -281,7 +286,7 @@ function loadPreviousOrder() {
 // ✅ Init
 document.addEventListener('DOMContentLoaded', () => {
   loadMenu();
-  loadPreviousOrder();
+  updateCart();
   listenForKitchenUpdate();
   document.getElementById('order-btn').addEventListener('click', orderNow);
   document.getElementById('checkout-btn').addEventListener('click', checkout);

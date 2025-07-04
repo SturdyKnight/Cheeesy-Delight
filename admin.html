@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel - Cheeesy Delight</title>
   <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="icon" type="image/png" href="logo.png" />
 
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
@@ -31,16 +31,14 @@
     <div class="card-content">
       <span class="card-title">Add Menu Item</span>
       <form id="menu-form">
+
+        <!-- Item Name -->
         <div class="input-field">
           <input type="text" id="item-name" required>
           <label for="item-name">Item Name</label>
         </div>
 
-        <div class="input-field">
-          <input type="number" id="item-price" required>
-          <label for="item-price">Price (₹)</label>
-        </div>
-
+        <!-- Category Select -->
         <div class="input-field">
           <select id="item-category" class="browser-default" required>
             <option value="" disabled selected>Select Category</option>
@@ -60,11 +58,43 @@
           <label for="item-category" class="active">Category</label>
         </div>
 
+        <!-- Regular Price -->
+        <div class="input-field" id="price-wrapper">
+          <input type="number" id="item-price">
+          <label for="item-price">Price (₹)</label>
+        </div>
+
+        <!-- Pizza Sizes -->
+        <div id="pizza-wrapper" style="display: none;">
+          <div class="input-field">
+            <input type="number" id="pizza-price-7">
+            <label for="pizza-price-7">Price for 7" (₹)</label>
+          </div>
+          <div class="input-field">
+            <input type="number" id="pizza-price-10">
+            <label for="pizza-price-10">Price for 10" (₹)</label>
+          </div>
+        </div>
+
+        <!-- Noodle Sizes -->
+        <div id="noodle-wrapper" style="display: none;">
+          <div class="input-field">
+            <input type="number" id="noodle-price-half">
+            <label for="noodle-price-half">Price for Half (₹)</label>
+          </div>
+          <div class="input-field">
+            <input type="number" id="noodle-price-full">
+            <label for="noodle-price-full">Price for Full (₹)</label>
+          </div>
+        </div>
+
+        <!-- Image URL -->
         <div class="input-field">
           <input type="url" id="item-image-url" required>
           <label for="item-image-url">Image URL</label>
         </div>
 
+        <!-- Submit Button -->
         <button class="btn orange waves-effect waves-light" type="submit">
           Add Item <i class="material-icons right">add</i>
         </button>
@@ -72,7 +102,7 @@
     </div>
   </div>
 
-  <!-- Menu Items List -->
+  <!-- Menu Items Display -->
   <h5 class="orange-text">Current Menu</h5>
   <div id="menu-items" class="row"></div>
 
@@ -86,12 +116,10 @@
   <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-  <!-- Init Materialize & Footer -->
+  <!-- Init Materialize & Year -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       M.AutoInit();
-
-      // Optional: Set current year
       document.getElementById('year').textContent = new Date().getFullYear();
     });
   </script>
