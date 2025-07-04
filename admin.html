@@ -6,121 +6,245 @@
   <title>Admin Panel - Cheeesy Delight</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png" />
-
-  <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet">
-
-  <!-- Materialize CSS -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet"/>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
-
-  <!-- Admin Script -->
   <script defer src="admin.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #fafafa;
+    }
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    }
+    .card-image img {
+      border-radius: 12px 12px 0 0;
+    }
+    .search-bar input {
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    .menu-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .menu-card {
+      flex: 1 1 calc(33.333% - 20px);
+      box-sizing: border-box;
+    }
+    @media (max-width: 768px) {
+      .menu-card {
+        flex: 1 1 100%;
+      }
+    }
+    #floating-add-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 999;
+    }
+
+    /* Combo Selector Styling */
+    .combo-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .combo-option {
+      width: 100px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      transition: 0.2s ease;
+      cursor: pointer;
+      background-color: #fff;
+    }
+
+    .combo-option input[type="checkbox"] {
+      display: none;
+    }
+
+    .combo-option img {
+      width: 100%;
+      height: 100px;
+      object-fit: cover;
+      border-radius: 6px;
+    }
+
+    .combo-option span {
+      text-align: center;
+      font-size: 13px;
+      margin-top: 6px;
+    }
+
+    .combo-option.selected {
+      border-color: #ff9800;
+      background-color: #fff3e0;
+    }
+
+    #combo-selection-count {
+      font-weight: 600;
+      margin-top: 10px;
+    }
+  </style>
 </head>
+
 <body class="container">
 
-  <h4 class="orange-text center-align">Cheeesy Delight - Admin Panel</h4>
+  <h4 class="center-align orange-text">Cheeesy Delight - Admin Panel</h4>
 
-  <!-- Add Menu Item Form -->
+  <!-- Collapsible Add/Edit Form -->
+  <ul class="collapsible">
+    <li class="active">
+      <div class="collapsible-header orange-text"><i class="material-icons">edit</i> Add or Edit Menu Item</div>
+      <div class="collapsible-body">
+        <form id="menu-form">
+          <div class="input-field">
+            <input id="item-name" type="text" required />
+            <label for="item-name">Item Name</label>
+          </div>
+
+          <div class="input-field">
+            <select id="item-category" class="browser-default" required>
+              <option value="" disabled selected>Select Category</option>
+              <option value="starters">Starters</option>
+              <option value="main-course">Main Course</option>
+              <option value="desserts">Desserts</option>
+              <option value="drinks">Drinks</option>
+              <option value="pizzas">Pizzas</option>
+              <option value="noodles">Noodles</option>
+              <option value="momos">Momos</option>
+              <option value="maggi">Maggi</option>
+              <option value="rice-bowls">Rice Bowls</option>
+              <option value="special-offers">Special Offers</option>
+              <option value="fasting">Fasting</option>
+            </select>
+          </div>
+
+          <div id="price-wrapper" class="input-field">
+            <input type="number" id="item-price" />
+            <label for="item-price">Price (₹)</label>
+          </div>
+
+          <div id="pizza-wrapper" style="display: none;">
+            <div class="input-field">
+              <input type="number" id="pizza-price-7">
+              <label for="pizza-price-7">Price for 7" (₹)</label>
+            </div>
+            <div class="input-field">
+              <input type="number" id="pizza-price-10">
+              <label for="pizza-price-10">Price for 10" (₹)</label>
+            </div>
+          </div>
+
+          <div id="noodle-wrapper" style="display: none;">
+            <div class="input-field">
+              <input type="number" id="noodle-price-half">
+              <label for="noodle-price-half">Price for Half (₹)</label>
+            </div>
+            <div class="input-field">
+              <input type="number" id="noodle-price-full">
+              <label for="noodle-price-full">Price for Full (₹)</label>
+            </div>
+          </div>
+
+          <div class="input-field">
+            <input id="item-image-url" type="url" required />
+            <label for="item-image-url">Image URL</label>
+          </div>
+
+          <button class="btn orange waves-effect waves-light" type="submit">
+            Save <i class="material-icons right">check</i>
+          </button>
+        </form>
+      </div>
+    </li>
+  </ul>
+
+  <!-- Combo Builder -->
   <div class="card">
     <div class="card-content">
-      <span class="card-title">Add Menu Item</span>
-      <form id="menu-form">
-
-        <!-- Item Name -->
-        <div class="input-field">
-          <input type="text" id="item-name" required>
-          <label for="item-name">Item Name</label>
-        </div>
-
-        <!-- Category Select -->
-        <div class="input-field">
-          <select id="item-category" class="browser-default" required>
-            <option value="" disabled selected>Select Category</option>
-            <option value="starters">Starters</option>
-            <option value="main-course">Main Course</option>
-            <option value="desserts">Desserts</option>
-            <option value="drinks">Drinks</option>
-            <option value="pizzas">Pizzas</option>
-            <option value="combos">Meal Combos</option>
-            <option value="momos">Momos</option>
-            <option value="maggi">Maggi</option>
-            <option value="rice-bowls">Rice Bowls</option>
-            <option value="noodles">Noodles</option>
-            <option value="special-offers">Special Offers</option>
-            <option value="fasting">Fasting</option>
-          </select>
-          <label for="item-category" class="active">Category</label>
-        </div>
-
-        <!-- Regular Price -->
-        <div class="input-field" id="price-wrapper">
-          <input type="number" id="item-price">
-          <label for="item-price">Price (₹)</label>
-        </div>
-
-        <!-- Pizza Sizes -->
-        <div id="pizza-wrapper" style="display: none;">
-          <div class="input-field">
-            <input type="number" id="pizza-price-7">
-            <label for="pizza-price-7">Price for 7" (₹)</label>
-          </div>
-          <div class="input-field">
-            <input type="number" id="pizza-price-10">
-            <label for="pizza-price-10">Price for 10" (₹)</label>
-          </div>
-        </div>
-
-        <!-- Noodle Sizes -->
-        <div id="noodle-wrapper" style="display: none;">
-          <div class="input-field">
-            <input type="number" id="noodle-price-half">
-            <label for="noodle-price-half">Price for Half (₹)</label>
-          </div>
-          <div class="input-field">
-            <input type="number" id="noodle-price-full">
-            <label for="noodle-price-full">Price for Full (₹)</label>
-          </div>
-        </div>
-
-        <!-- Image URL -->
-        <div class="input-field">
-          <input type="url" id="item-image-url" required>
-          <label for="item-image-url">Image URL</label>
-        </div>
-
-        <!-- Submit Button -->
-        <button class="btn orange waves-effect waves-light" type="submit">
-          Add Item <i class="material-icons right">add</i>
-        </button>
-      </form>
+      <span class="card-title">🥡 Create Combo</span>
+      <div class="input-field">
+        <input type="text" id="combo-name" required />
+        <label for="combo-name">Combo Name</label>
+      </div>
+      <div class="input-field">
+        <input type="number" id="combo-price" required />
+        <label for="combo-price">Total Price (₹)</label>
+      </div>
+      <div>
+        <p>Select Recipes:</p>
+        <p id="combo-selection-count">Selected: 0</p>
+        <div id="combo-select-items" class="combo-selector" style="max-height: 360px; overflow-y: auto;"></div>
+      </div>
+      <button class="btn orange waves-effect waves-light" id="save-combo-btn">
+        Save Combo <i class="material-icons right">add</i>
+      </button>
     </div>
   </div>
 
-  <!-- Menu Items Display -->
-  <h5 class="orange-text">Current Menu</h5>
-  <div id="menu-items" class="row"></div>
+  <!-- Search Bar -->
+  <div class="search-bar">
+    <input id="search-input" type="text" placeholder="🔍 Search recipes by name or category...">
+  </div>
+
+  <!-- Menu Items -->
+  <div id="menu-items" class="menu-wrapper"></div>
+
+  <!-- Floating Button -->
+  <button id="floating-add-btn" class="btn-floating btn-large orange pulse" title="Go to Form">
+    <i class="material-icons">add</i>
+  </button>
 
   <!-- Footer -->
   <footer class="site-footer">
     <p>&copy; <span id="year"></span> <strong>cyberpeshwas</strong> · All rights reserved</p>
     <p>📞 <a href="tel:+918180858531">+91 81808 58531</a> |
-       💬 <a href="https://wa.me/918180858531" target="_blank">Chat on WhatsApp</a></p>
+      💬 <a href="https://wa.me/918180858531" target="_blank">Chat on WhatsApp</a></p>
   </footer>
 
   <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-  <!-- Init Materialize & Year -->
+  <!-- Init -->
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', () => {
       M.AutoInit();
       document.getElementById('year').textContent = new Date().getFullYear();
+
+      document.getElementById('floating-add-btn').onclick = () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.getElementById('item-name').focus();
+      };
+
+      // Highlight selection for combo items
+      document.addEventListener('change', (e) => {
+        if (e.target.classList.contains('combo-check')) {
+          const wrapper = e.target.closest('.combo-option');
+          if (wrapper) {
+            wrapper.classList.toggle('selected', e.target.checked);
+          }
+
+          const count = document.querySelectorAll('.combo-check:checked').length;
+          document.getElementById('combo-selection-count').innerText = `Selected: ${count}`;
+        }
+      });
     });
   </script>
 </body>

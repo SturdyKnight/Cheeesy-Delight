@@ -11,7 +11,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ✅ DOM
+// ✅ DOM Elements
 const form = document.getElementById('menu-form');
 const menuList = document.getElementById('menu-items');
 const categorySelect = document.getElementById('item-category');
@@ -23,84 +23,49 @@ const price7 = document.getElementById('pizza-price-7');
 const price10 = document.getElementById('pizza-price-10');
 const noodleHalf = document.getElementById('noodle-price-half');
 const noodleFull = document.getElementById('noodle-price-full');
+const searchInput = document.getElementById('search-input');
+const comboContainer = document.getElementById('combo-select-items');
+const comboName = document.getElementById('combo-name');
+const comboPrice = document.getElementById('combo-price');
+const saveComboBtn = document.getElementById('save-combo-btn');
 
-// ✅ Track editing
+// ✅ State
 let isEditing = false;
 let editingId = null;
 let editingCategory = null;
+let editingComboId = null;
 
-// ✅ Show/hide price fields on category change
+// ✅ Toggle price fields
 categorySelect.addEventListener('change', () => {
   const value = categorySelect.value;
-  if (value === 'pizzas') {
-    priceWrapper.style.display = 'none';
-    pizzaWrapper.style.display = 'block';
-    noodleWrapper.style.display = 'none';
-  } else if (value === 'noodles') {
-    priceWrapper.style.display = 'none';
-    pizzaWrapper.style.display = 'none';
-    noodleWrapper.style.display = 'block';
-  } else {
-    priceWrapper.style.display = 'block';
-    pizzaWrapper.style.display = 'none';
-    noodleWrapper.style.display = 'none';
-  }
+  priceWrapper.style.display = (value !== 'pizzas' && value !== 'noodles') ? 'block' : 'none';
+  pizzaWrapper.style.display = value === 'pizzas' ? 'block' : 'none';
+  noodleWrapper.style.display = value === 'noodles' ? 'block' : 'none';
 });
 
-// ✅ Submit handler
+// ✅ Submit Menu Item
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-
   const name = document.getElementById('item-name').value.trim();
   const category = categorySelect.value;
   const imageUrl = document.getElementById('item-image-url').value.trim();
+  if (!name || !category || !imageUrl) return alert("Please fill all fields.");
 
-  let itemData = {};
-
-  if (!name || !category || !imageUrl) {
-    alert("Please fill all fields.");
-    return;
-  }
-
+  let itemData;
   if (category === 'pizzas') {
     const val7 = parseFloat(price7.value);
     const val10 = parseFloat(price10.value);
-    if (isNaN(val7) || isNaN(val10)) {
-      alert("Enter valid prices for both pizza sizes.");
-      return;
-    }
-    itemData = {
-      name,
-      image: imageUrl,
-      type: "pizza",
-      size7: val7,
-      size10: val10
-    };
+    if (isNaN(val7) || isNaN(val10)) return alert("Enter valid pizza prices.");
+    itemData = { name, image: imageUrl, type: "pizza", size7: val7, size10: val10 };
   } else if (category === 'noodles') {
     const half = parseFloat(noodleHalf.value);
     const full = parseFloat(noodleFull.value);
-    if (isNaN(half) || isNaN(full)) {
-      alert("Enter valid prices for half and full noodles.");
-      return;
-    }
-    itemData = {
-      name,
-      image: imageUrl,
-      type: "noodles",
-      half: half,
-      full: full
-    };
+    if (isNaN(half) || isNaN(full)) return alert("Enter valid noodle prices.");
+    itemData = { name, image: imageUrl, type: "noodles", half, full };
   } else {
-    const val = parseFloat(priceInput.value);
-    if (isNaN(val)) {
-      alert("Enter a valid price.");
-      return;
-    }
-    itemData = {
-      name,
-      image: imageUrl,
-      price: val
-    };
+    const price = parseFloat(priceInput.value);
+    if (isNaN(price)) return alert("Enter a valid price.");
+    itemData = { name, image: imageUrl, price };
   }
 
   if (isEditing && editingId && editingCategory) {
@@ -118,70 +83,190 @@ form.addEventListener('submit', async (e) => {
   isEditing = false;
   editingId = null;
   editingCategory = null;
-
   priceWrapper.style.display = 'block';
   pizzaWrapper.style.display = 'none';
   noodleWrapper.style.display = 'none';
 });
 
+// ✅ Render Menu Cards
+function renderMenuItem(category, id, item) {
+  const cardId = `card-${category}-${id}`;
+  document.getElementById(cardId)?.remove();
+
+  const card = document.createElement('div');
+  card.className = 'menu-card card';
+  card.id = cardId;
+
+  const priceText = item.type === 'pizza'
+    ? `Price: 7" ₹${item.size7}, 10" ₹${item.size10}`
+    : item.type === 'noodles'
+    ? `Price: Half ₹${item.half}, Full ₹${item.full}`
+    : `Price: ₹${item.price}`;
+
+  let actionHTML = `
+    <a href="#!" onclick="editItem('${category}', '${id}', '${encodeURIComponent(item.name)}', ${item.price || 0}, '${encodeURIComponent(item.image)}', ${item.size7 || 0}, ${item.size10 || 0}, '${item.type || ''}', ${item.half || 0}, ${item.full || 0})">Edit</a>
+    <a href="#!" onclick="deleteItem('${category}', '${id}')">Delete</a>
+  `;
+
+  if (category === 'combos' && Array.isArray(item.items)) {
+    actionHTML = `
+      <a href="#!" onclick="editCombo('${id}')">Edit Combo</a>
+      <a href="#!" onclick="deleteItem('${category}', '${id}')">Delete</a>
+    `;
+  }
+
+  card.innerHTML = `
+    <div class="card-image">
+      <img src="${item.image}" alt="${item.name}" style="aspect-ratio: 1 / 1; object-fit: cover;" />
+      <span class="card-title">${item.name}</span>
+    </div>
+    <div class="card-content">
+      <p>${priceText}</p>
+      <p>Category: ${category}</p>
+    </div>
+    <div class="card-action">${actionHTML}</div>
+  `;
+  menuList.appendChild(card);
+}
+
 // ✅ Load Menu Items
 function loadMenuItems() {
   const categories = [
-    'starters', 'main-course', 'desserts', 'drinks', 'pizzas', 'combos',
-    'momos', 'maggi', 'rice-bowls', 'noodles', 'special-offers', 'fasting'
+    'starters', 'main-course', 'desserts', 'drinks', 'pizzas',
+    'momos', 'maggi', 'rice-bowls', 'noodles', 'special-offers', 'fasting', 'combos'
   ];
   menuList.innerHTML = '';
-
   categories.forEach(category => {
-    db.ref(`menu/${category}`).on('value', snapshot => {
-      const data = snapshot.val();
-      if (!data) return;
-
-      Object.entries(data).forEach(([id, item]) => {
-        const card = document.createElement('div');
-        card.className = 'col s12 m6 l4';
-        let priceText = '';
-
-        if (item.type === 'pizza') {
-          priceText = `Price: 7" ₹${item.size7}, 10" ₹${item.size10}`;
-        } else if (item.type === 'noodles') {
-          priceText = `Price: Half ₹${item.half}, Full ₹${item.full}`;
-        } else {
-          priceText = `Price: ₹${item.price}`;
-        }
-
-        card.innerHTML = `
-          <div class="card">
-            <div class="card-image">
-              <img src="${item.image}" style="aspect-ratio: 1 / 1; object-fit: cover;">
-              <span class="card-title">${item.name}</span>
-            </div>
-            <div class="card-content">
-              <p>${priceText}</p>
-              <p>Category: ${category}</p>
-            </div>
-            <div class="card-action">
-              <a href="#!" onclick="editItem('${category}', '${id}', '${encodeURIComponent(item.name)}', ${item.price || 0}, '${encodeURIComponent(item.image)}', ${item.size7 || 0}, ${item.size10 || 0}, '${item.type || ''}', ${item.half || 0}, ${item.full || 0})">Edit</a>
-              <a href="#!" onclick="deleteItem('${category}', '${id}')">Delete</a>
-            </div>
-          </div>
-        `;
-        menuList.appendChild(card);
-      });
-    });
+    const ref = db.ref(`menu/${category}`);
+    ref.on('child_added', snap => renderMenuItem(category, snap.key, snap.val()));
+    ref.on('child_changed', snap => renderMenuItem(category, snap.key, snap.val()));
+    ref.on('child_removed', snap => document.getElementById(`card-${category}-${snap.key}`)?.remove());
   });
 }
 
-// ✅ Delete Item
-function deleteItem(category, id) {
-  if (confirm("Delete this item?")) {
-    db.ref(`menu/${category}/${id}`).remove();
-    M.toast({ html: 'Item deleted.', classes: 'red' });
-  }
+// ✅ Update Selection Counter and Highlight
+function updateComboSelectionUI() {
+  const checks = document.querySelectorAll('.combo-check');
+  let count = 0;
+  checks.forEach(cb => {
+    const wrapper = cb.closest('label.combo-option');
+    if (cb.checked) {
+      wrapper.classList.add('selected');
+      count++;
+    } else {
+      wrapper.classList.remove('selected');
+    }
+  });
+
+  const label = document.getElementById('combo-selection-count');
+  if (label) label.innerText = `Selected: ${count}`;
 }
 
-// ✅ Edit Item
-function editItem(category, id, name, price, imageUrl, size7 = 0, size10 = 0, type = '', half = 0, full = 0) {
+// ✅ Load Combo Builder Recipes
+function loadComboBuilderOptions() {
+  comboContainer.innerHTML = '';
+  db.ref('menu').once('value', snap => {
+    const data = snap.val();
+    if (!data) return;
+
+    Object.entries(data).forEach(([category, items]) => {
+      if (category === 'combos') return;
+
+      Object.entries(items).forEach(([id, item]) => {
+        const div = document.createElement('div');
+        div.className = 'col s12 m6 l4';
+        div.innerHTML = `
+          <label class="combo-option" style="display:flex;align-items:center;gap:10px;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:8px;transition:0.2s;">
+            <input type="checkbox" class="combo-check filled-in" data-id="${id}" data-name="${item.name}" data-image="${item.image}" data-category="${category}" style="pointer-events:auto;" />
+            <img src="${item.image}" width="40" height="40" style="object-fit:cover;border-radius:6px;">
+            <span style="font-size:14px;">${item.name}</span>
+          </label>
+        `;
+        comboContainer.appendChild(div);
+      });
+    });
+
+    document.querySelectorAll('.combo-check').forEach(cb => {
+      cb.addEventListener('change', updateComboSelectionUI);
+    });
+
+    if (!document.getElementById('combo-selection-count')) {
+      const counter = document.createElement('p');
+      counter.id = 'combo-selection-count';
+      counter.style = 'font-weight:600; margin-top:10px;';
+      counter.innerText = 'Selected: 0';
+      comboContainer.parentElement.insertBefore(counter, comboContainer);
+    }
+
+    updateComboSelectionUI();
+  });
+}
+
+// ✅ Save Combo
+if (saveComboBtn) {
+  saveComboBtn.addEventListener('click', async () => {
+    const name = comboName.value.trim();
+    const price = parseFloat(comboPrice.value);
+    if (!name || isNaN(price)) return alert("Enter combo name and valid price.");
+
+    const selected = [...document.querySelectorAll('.combo-check:checked')].map(cb => ({
+      id: cb.dataset.id,
+      name: cb.dataset.name,
+      image: cb.dataset.image,
+      category: cb.dataset.category
+    }));
+
+    if (selected.length < 2) return alert("Select at least 2 recipes.");
+
+    const data = {
+      name,
+      price,
+      items: selected,
+      image: selected[0].image,
+      type: "combo"
+    };
+
+    if (editingComboId) {
+      await db.ref(`menu/combos/${editingComboId}`).set(data);
+      M.toast({ html: 'Combo updated!', classes: 'blue' });
+    } else {
+      await db.ref('menu/combos').push(data);
+      M.toast({ html: 'Combo saved!', classes: 'green' });
+    }
+
+    comboName.value = '';
+    comboPrice.value = '';
+    editingComboId = null;
+    document.querySelectorAll('.combo-check').forEach(cb => cb.checked = false);
+    updateComboSelectionUI();
+  });
+}
+
+// ✅ Edit Combo
+function editCombo(id) {
+  db.ref(`menu/combos/${id}`).once('value').then(snap => {
+    const combo = snap.val();
+    if (!combo) return;
+
+    comboName.value = combo.name;
+    comboPrice.value = combo.price;
+    editingComboId = id;
+
+    document.querySelectorAll('.combo-check').forEach(cb => cb.checked = false);
+    combo.items.forEach(sel => {
+      const cb = document.querySelector(`.combo-check[data-id="${sel.id}"]`);
+      if (cb) cb.checked = true;
+    });
+
+    updateComboSelectionUI();
+    M.updateTextFields();
+    comboName.scrollIntoView({ behavior: 'smooth' });
+    M.toast({ html: 'Editing combo...', classes: 'blue' });
+  });
+}
+
+// ✅ Edit Menu Item
+function editItem(category, id, name, price, imageUrl, size7, size10, type, half, full) {
   isEditing = true;
   editingId = id;
   editingCategory = category;
@@ -210,8 +295,36 @@ function editItem(category, id, name, price, imageUrl, size7 = 0, size10 = 0, ty
   }
 
   M.updateTextFields();
+  const section = document.querySelector('.collapsible li');
+  if (section && !section.classList.contains('active')) {
+    M.Collapsible.getInstance(document.querySelector('.collapsible')).open(0);
+  }
   M.toast({ html: 'Editing mode activated', classes: 'blue' });
 }
 
+// ✅ Delete
+function deleteItem(category, id) {
+  if (confirm("Delete this item?")) {
+    db.ref(`menu/${category}/${id}`).remove();
+    M.toast({ html: 'Item deleted.', classes: 'red' });
+  }
+}
+
+// ✅ Search
+if (searchInput) {
+  searchInput.addEventListener('input', () => {
+    const query = searchInput.value.toLowerCase();
+    document.querySelectorAll('#menu-items .menu-card').forEach(card => {
+      const name = card.querySelector('.card-title')?.textContent.toLowerCase() || '';
+      const category = card.querySelector('.card-content p:nth-child(2)')?.textContent.toLowerCase() || '';
+      card.style.display = name.includes(query) || category.includes(query) ? 'block' : 'none';
+    });
+  });
+}
+
 // ✅ Init
-window.onload = loadMenuItems;
+document.addEventListener('DOMContentLoaded', () => {
+  M.AutoInit();
+  loadMenuItems();
+  loadComboBuilderOptions();
+});

@@ -11,7 +11,6 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ✅ Session Info
 const sessionId = new URLSearchParams(window.location.search).get('session');
 const customerName = localStorage.getItem('cheesy_name');
 const tableNumber = localStorage.getItem('cheesy_table');
@@ -40,32 +39,79 @@ function renderMenuItem(category, itemId, itemData) {
 
   let controlsHTML = '';
 
-if (itemData.type === 'pizza') {
-  const sizes = [
-    { label: '7"', suffix: '_7', price: itemData.size7 },
-    { label: '10"', suffix: '_10', price: itemData.size10 }
-  ];
+  const safeName = itemData.name?.replace(/'/g, "\\'");
 
-  const safeName = itemData.name.replace(/'/g, "\\'");
+  // 👉 COMBO item
+// 👉 COMBO item
+if (category === 'combos' && itemData.items && Array.isArray(itemData.items)) {
+  const comboQty = cart.find(i => i.id === itemId)?.qty || 0;
+  const mid = Math.ceil(itemData.items.length / 2);
+  const part1 = itemData.items.slice(0, mid);
+  const part2 = itemData.items.slice(mid);
 
-  controlsHTML = sizes.map(size => {
-    const fullId = itemId + size.suffix;
-    const cartItem = cart.find(i => i.id === fullId);
-    const qty = cartItem ? cartItem.qty : 0;
-
-    return `
-      <div style="margin: 6px 0;">
-        <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
-        <div class="qty-controls">
-          <button onclick="updateQuantity('${fullId}', -1)">−</button>
-          <span>${qty}</span>
-          <button onclick="updateQuantity('${fullId}', 1, '${safeName}', ${size.price})">+</button>
-        </div>
+  const renderPart = (items) => {
+    return items.map(i => `
+      <div style="text-align:center; width:90px;">
+        <img src="${i.image}" alt="${i.name}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 10px; margin-bottom: 4px;" />
+        <div style="font-size: 12px;">${i.name}</div>
       </div>
-    `;
-  }).join('');
+    `).join('');
+  };
+
+  const comboImagesHTML = `
+    <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; flex-direction: row; margin-bottom: 12px;">
+      <div style="display:flex; gap:12px; flex-wrap: wrap; justify-content: center;">${renderPart(part1)}</div>
+      <div style="font-size: 26px; font-weight: bold;">+</div>
+      <div style="display:flex; gap:12px; flex-wrap: wrap; justify-content: center;">${renderPart(part2)}</div>
+    </div>
+  `;
+
+  const controlsHTML = comboQty === 0
+    ? `<button class="add-btn" onclick="addToCart('${itemId}', '${safeName}', ${itemData.price})">Add</button>`
+    : `<div class="qty-controls">
+         <button onclick="updateQuantity('${itemId}', -1)">−</button>
+         <span>${comboQty}</span>
+         <button onclick="updateQuantity('${itemId}', 1, '${safeName}', ${itemData.price})">+</button>
+       </div>`;
+
+  itemDiv.innerHTML = `
+    ${comboImagesHTML}
+    <div class="menu-info" style="text-align:center;">
+      <p><strong style="font-size: 16px;">${itemData.name}</strong></p>
+      <p style="margin: 6px 0; font-weight: 500;">Meal Price: ₹${itemData.price}</p>
+      ${controlsHTML}
+    </div>
+  `;
+  section.appendChild(itemDiv);
+  return;
 }
- else if (itemData.type === 'noodles') {
+
+
+  // 🍕 Pizza
+  if (itemData.type === 'pizza') {
+    const sizes = [
+      { label: '7"', suffix: '_7', price: itemData.size7 },
+      { label: '10"', suffix: '_10', price: itemData.size10 }
+    ];
+
+    controlsHTML = sizes.map(size => {
+      const fullId = itemId + size.suffix;
+      const cartItem = cart.find(i => i.id === fullId);
+      const qty = cartItem ? cartItem.qty : 0;
+      return `
+        <div style="margin: 6px 0;">
+          <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
+          <div class="qty-controls">
+            <button onclick="updateQuantity('${fullId}', -1)">−</button>
+            <span>${qty}</span>
+            <button onclick="updateQuantity('${fullId}', 1, '${safeName}', ${size.price})">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+  // 🍜 Noodles
+  else if (itemData.type === 'noodles') {
     const sizes = [
       { label: 'Half', suffix: '_half', price: itemData.half },
       { label: 'Full', suffix: '_full', price: itemData.full }
@@ -75,28 +121,28 @@ if (itemData.type === 'pizza') {
       const fullId = itemId + size.suffix;
       const cartItem = cart.find(i => i.id === fullId);
       const qty = cartItem ? cartItem.qty : 0;
-
       return `
         <div style="margin: 6px 0;">
           <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
           <div class="qty-controls">
             <button onclick="updateQuantity('${fullId}', -1)">−</button>
             <span>${qty}</span>
-            <button onclick="updateQuantity('${fullId}', 1, '${itemData.name} (${size.label})', ${size.price})">+</button>
+            <button onclick="updateQuantity('${fullId}', 1, '${safeName} (${size.label})', ${size.price})">+</button>
           </div>
         </div>
       `;
     }).join('');
-  } else {
+  }
+  // 🧁 Regular items
+  else {
     const cartItem = cart.find(i => i.id === itemId);
     const qty = cartItem ? cartItem.qty : 0;
-
     controlsHTML = qty === 0
-      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${itemData.name}', ${itemData.price})">Add</button>`
+      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${safeName}', ${itemData.price})">Add</button>`
       : `<div class="qty-controls">
            <button onclick="updateQuantity('${itemId}', -1)">−</button>
            <span>${qty}</span>
-           <button onclick="updateQuantity('${itemId}', 1, '${itemData.name}', ${itemData.price})">+</button>
+           <button onclick="updateQuantity('${itemId}', 1, '${safeName}', ${itemData.price})">+</button>
          </div>`;
   }
 
@@ -141,10 +187,8 @@ function updateCart() {
 
   cart.forEach(item => {
     const li = document.createElement('li');
-    li.innerHTML = `
-      ${item.name} × ${item.qty} - ₹${item.price * item.qty}
-      <button onclick="updateQuantity('${item.id}', -1)">×</button>
-    `;
+    li.innerHTML = `${item.name} × ${item.qty} - ₹${item.price * item.qty}
+      <button onclick="updateQuantity('${item.id}', -1)">×</button>`;
     cartItems.appendChild(li);
     sum += item.price * item.qty;
   });
@@ -173,10 +217,7 @@ function loadMenu() {
     orderedCategories.forEach(category => {
       const sectionTitle = category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
       const section = document.createElement("div");
-      section.innerHTML = `
-        <h2>${sectionTitle}</h2>
-        <div class="menu-category" id="${category}"></div>
-      `;
+      section.innerHTML = `<h2>${sectionTitle}</h2><div class="menu-category" id="${category}"></div>`;
       menuSection.appendChild(section);
 
       const items = menu[category];
@@ -269,7 +310,7 @@ function checkout() {
   });
 }
 
-// ✅ Kitchen Update Listener
+// ✅ Kitchen Status Watcher
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
