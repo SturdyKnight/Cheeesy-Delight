@@ -45,24 +45,19 @@ function renderMenuItem(category, itemId, itemData) {
 // 👉 COMBO item
 if (category === 'combos' && itemData.items && Array.isArray(itemData.items)) {
   const comboQty = cart.find(i => i.id === itemId)?.qty || 0;
-  const mid = Math.ceil(itemData.items.length / 2);
-  const part1 = itemData.items.slice(0, mid);
-  const part2 = itemData.items.slice(mid);
 
-  const renderPart = (items) => {
+  const renderComboItems = (items) => {
     return items.map(i => `
-      <div style="text-align:center; width:90px;">
-        <img src="${i.image}" alt="${i.name}" style="width: 90px; height: 90px; object-fit: cover; border-radius: 10px; margin-bottom: 4px;" />
-        <div style="font-size: 12px;">${i.name}</div>
+      <div style="text-align: center; width: 110px;">
+        <img src="${i.image}" alt="${i.name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 6px;" />
+        <div style="font-size: 14px; font-weight: 500;">${i.name}</div>
       </div>
     `).join('');
   };
 
   const comboImagesHTML = `
-    <div style="display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; flex-direction: row; margin-bottom: 12px;">
-      <div style="display:flex; gap:12px; flex-wrap: wrap; justify-content: center;">${renderPart(part1)}</div>
-      <div style="font-size: 26px; font-weight: bold;">+</div>
-      <div style="display:flex; gap:12px; flex-wrap: wrap; justify-content: center;">${renderPart(part2)}</div>
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom: 16px;">
+      ${renderComboItems(itemData.items)}
     </div>
   `;
 
@@ -76,16 +71,16 @@ if (category === 'combos' && itemData.items && Array.isArray(itemData.items)) {
 
   itemDiv.innerHTML = `
     ${comboImagesHTML}
-    <div class="menu-info" style="text-align:center;">
-      <p><strong style="font-size: 16px;">${itemData.name}</strong></p>
-      <p style="margin: 6px 0; font-weight: 500;">Meal Price: ₹${itemData.price}</p>
+    <div class="menu-info" style="text-align: center;">
+      <p><strong style="font-size: 18px;">${itemData.name}</strong></p>
+      <p style="margin: 6px 0; font-weight: 600; font-size: 16px;">Meal Price: ₹${itemData.price}</p>
       ${controlsHTML}
     </div>
   `;
+
   section.appendChild(itemDiv);
   return;
 }
-
 
   // 🍕 Pizza
   if (itemData.type === 'pizza') {
