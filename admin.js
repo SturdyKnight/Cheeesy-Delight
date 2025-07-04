@@ -1,3 +1,4 @@
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDHyrO3YK0JI1wa6I1XQtcTh8asp2p992A",
   authDomain: "cheesydelight-80a43.firebaseapp.com",
@@ -8,12 +9,14 @@ const firebaseConfig = {
   appId: "1:433558050592:web:169b277e2337931475e945"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
 const form = document.getElementById('menu-form');
 const menuList = document.getElementById('menu-items');
 
+// Submit handler
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
@@ -35,8 +38,14 @@ form.addEventListener('submit', async (e) => {
   M.toast({ html: 'Menu item added!', classes: 'green' });
 });
 
+// Load all items from all categories
 function loadMenuItems() {
-  const categories = ['starters', 'main-course', 'desserts', 'drinks'];
+  const categories = [
+    'starters', 'main-course', 'desserts', 'drinks',
+    'pizzas', 'combos', 'momos', 'maggi',
+    'rice-bowls', 'noodles', 'special-offers', 'fasting'
+  ];
+
   menuList.innerHTML = '';
 
   categories.forEach(category => {
@@ -68,6 +77,7 @@ function loadMenuItems() {
   });
 }
 
+// Delete item
 function deleteItem(category, id) {
   if (confirm("Delete this item?")) {
     db.ref(`menu/${category}/${id}`).remove();

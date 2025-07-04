@@ -42,14 +42,22 @@
         </div>
 
         <div class="input-field">
-          <select id="item-category" required>
+          <select id="item-category" class="browser-default" required>
             <option value="" disabled selected>Select Category</option>
             <option value="starters">Starters</option>
             <option value="main-course">Main Course</option>
             <option value="desserts">Desserts</option>
             <option value="drinks">Drinks</option>
+            <option value="pizzas">Pizzas</option>
+            <option value="combos">Meal Combos</option>
+            <option value="momos">Momos</option>
+            <option value="maggi">Maggi</option>
+            <option value="rice-bowls">Rice Bowls</option>
+            <option value="noodles">Noodles</option>
+            <option value="special-offers">Special Offers</option>
+            <option value="fasting">Fasting</option>
           </select>
-          <label for="item-category">Category</label>
+          <label for="item-category" class="active">Category</label>
         </div>
 
         <div class="input-field">
@@ -78,19 +86,14 @@
   <!-- Materialize JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-  <!-- Init Materialize & Load Footer -->
+  <!-- Init Materialize & Footer -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       M.AutoInit();
 
-      // ✅ Optional: Load footer dynamically
-      fetch('footer.html')
-        .then(res => res.text())
-        .then(html => {
-          document.getElementById('footer-container').innerHTML = html;
-        });
+      // Optional: Set current year
+      document.getElementById('year').textContent = new Date().getFullYear();
     });
   </script>
-  
 </body>
 </html>
