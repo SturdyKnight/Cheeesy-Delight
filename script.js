@@ -11,35 +11,39 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// ✅ Session Handling
+// ✅ Session Info
 const sessionId = new URLSearchParams(window.location.search).get('session');
 const customerName = localStorage.getItem('cheesy_name');
 const tableNumber = localStorage.getItem('cheesy_table');
-const categories = ['starters', 'main-course', 'desserts', 'drinks'];
 let cart = [];
 
-// ✅ Audio
+// ✅ Sound + Toast
 const userAudio = new Audio('user.mp3');
-
-// ✅ Toast Creator
 function showToast(message) {
   const toast = document.createElement('div');
   toast.className = 'toast';
   toast.innerText = message;
   toast.style.cssText = `
     position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-    background: #333; color: #fff; padding: 10px 16px;
-    border-radius: 6px; font-size: 14px; z-index: 9999;
+    background: #333; color: #fff; padding: 10px 16px; border-radius: 6px; font-size: 14px; z-index: 9999;
     box-shadow: 0 3px 10px rgba(0,0,0,0.2); transition: opacity 0.3s ease;
   `;
   document.body.appendChild(toast);
   setTimeout(() => toast.remove(), 3000);
 }
 
-// ✅ Menu Rendering
+// ✅ Menu Renderer
 function renderMenuItem(category, itemId, itemData) {
+  const section = document.getElementById(category);
+  if (!section) return;
+
+  const existing = document.getElementById(`menu-${itemId}`);
+  if (existing) existing.remove();
+
   const itemDiv = document.createElement('div');
   itemDiv.className = 'menu-item';
+  itemDiv.id = `menu-${itemId}`;
+
   const cartItem = cart.find(i => i.id === itemId);
   const qty = cartItem ? cartItem.qty : 0;
 
@@ -61,28 +65,50 @@ function renderMenuItem(category, itemId, itemData) {
         }
       </div>
     </div>`;
-  document.getElementById(category).appendChild(itemDiv);
+  section.appendChild(itemDiv);
 }
 
+// ✅ Load Menu with Fixed Category Order
 function loadMenu() {
-  categories.forEach(category => {
-    db.ref('menu/' + category).on('value', snapshot => {
-      const section = document.getElementById(category);
-      section.innerHTML = '';
-      const data = snapshot.val();
-      if (data) {
-        for (let id in data) renderMenuItem(category, id, data[id]);
-      } else {
-        section.innerHTML = `<p class="empty-menu-msg">No items available in this category right now.</p>`;
+  const preferredOrder = ['starters', 'main-course', 'desserts', 'drinks'];
+
+  db.ref("menu").on("value", (snapshot) => {
+    const menu = snapshot.val();
+    if (!menu) return;
+
+    const menuSection = document.getElementById("menu-section");
+    menuSection.innerHTML = "";
+
+    // Sorted Category Order: Preferred + New/Dynamic ones
+    const allCategories = Object.keys(menu);
+    const orderedCategories = [
+      ...preferredOrder.filter(cat => allCategories.includes(cat)),
+      ...allCategories.filter(cat => !preferredOrder.includes(cat))
+    ];
+
+    orderedCategories.forEach(category => {
+      const sectionTitle = category.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const section = document.createElement("div");
+      section.innerHTML = `
+        <h2>${sectionTitle}</h2>
+        <div class="menu-category" id="${category}"></div>
+      `;
+      menuSection.appendChild(section);
+
+      const items = menu[category];
+      if (items) {
+        for (let itemId in items) {
+          renderMenuItem(category, itemId, items[itemId]);
+        }
       }
     });
   });
 }
 
-// ✅ Cart Logic
+// ✅ Cart
 function addToCart(id, name, price) {
-  const item = cart.find(i => i.id === id);
-  if (!item) {
+  const exists = cart.find(i => i.id === id);
+  if (!exists) {
     cart.push({ id, name, price, qty: 1, addedAt: new Date().toISOString() });
     showToast(`✅ 1 ${name} added`);
   }
@@ -90,10 +116,10 @@ function addToCart(id, name, price) {
   loadMenu();
 }
 
-function updateQuantity(id, change) {
+function updateQuantity(id, delta) {
   const item = cart.find(i => i.id === id);
   if (!item) return;
-  item.qty += change;
+  item.qty += delta;
   if (item.qty <= 0) cart = cart.filter(i => i.id !== id);
   updateCart();
   loadMenu();
@@ -104,6 +130,7 @@ function updateCart() {
   const total = document.getElementById('total');
   cartItems.innerHTML = '';
   let sum = 0;
+
   cart.forEach(item => {
     const li = document.createElement('li');
     li.innerHTML = `
@@ -113,10 +140,12 @@ function updateCart() {
     cartItems.appendChild(li);
     sum += item.price * item.qty;
   });
+
   total.textContent = sum;
   document.getElementById('order-btn').disabled = cart.length === 0;
 }
 
+// ✅ Order Status
 function showStatus(msg) {
   const status = document.getElementById('order-status');
   status.textContent = msg;
@@ -124,17 +153,16 @@ function showStatus(msg) {
   status.classList.add('fade-in');
 }
 
-// ✅ Order Submission
+// ✅ Place Order
 function orderNow() {
-  if (cart.length === 0) return;
+  if (!cart.length) return;
 
   db.ref('menu').once('value').then(menuSnap => {
     const menuData = menuSnap.val();
-
     const cartWithCategory = cart.map(item => {
       let category = null;
       for (let cat in menuData) {
-        if (menuData[cat] && Object.values(menuData[cat]).some(m => m.name === item.name)) {
+        if (Object.values(menuData[cat] || {}).some(m => m.name === item.name)) {
           category = cat;
           break;
         }
@@ -146,14 +174,10 @@ function orderNow() {
       const prev = snapshot.val();
       const allItems = prev ? [...prev.items, ...cartWithCategory] : [...cartWithCategory];
       const merged = {};
-
       allItems.forEach(item => {
         const key = `${item.id}_${item.category}`;
-        if (!merged[key]) {
-          merged[key] = { ...item };
-        } else {
-          merged[key].qty += item.qty;
-        }
+        if (!merged[key]) merged[key] = { ...item };
+        else merged[key].qty += item.qty;
       });
 
       const finalItems = Object.values(merged);
@@ -169,26 +193,10 @@ function orderNow() {
         status: 'preparing'
       });
 
-      db.ref('orders/' + sessionId + '/updates').push({
+      db.ref(`orders/${sessionId}/updates`).push({
         timestamp: new Date().toISOString(),
         added: [...cartWithCategory],
         total: newTotal
-      });
-
-      fetch("https://onesignal.com/api/v1/notifications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Basic os_v2_app_5zopwpsvgzawbkbck6gmqhjh5o4zfvm6xgvunc4ee4l6gljp5zx4wfnpid2qhq2i56krh52mzoyvnlcx2eccyuruet3hltd5rwy72wq"
-        },
-        body: JSON.stringify({
-          app_id: "ee5cfb3e-5536-4160-a822-578cc81d27eb",
-          included_segments: ["Subscribed Users"],
-          headings: { en: "🍽️ New Order from Table " + tableNumber },
-          contents: { en: `${customerName} placed an order.` },
-          url: "https://sturdyknight.github.io/kitchen.html",
-          chrome_web_icon: "https://sturdyknight.github.io/logo.png"
-        })
       });
 
       cart = [];
@@ -200,67 +208,50 @@ function orderNow() {
   });
 }
 
-// ✅ Checkout + PDF
+// ✅ Checkout
 function checkout() {
-  if (!sessionId) return;
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const order = snapshot.val();
-    if (!order) return;
-
-    if (order.status === 'done') {
-      const dateStr = new Date(order.timestamp).toLocaleString();
-      let receipt = `      Cheesy Delight\n-----------------------------\n`;
-      receipt += `Name: ${order.name}\nTable: ${order.table}\nDate: ${dateStr}\n-----------------------------\n`;
-      order.items.forEach(item => {
-        receipt += `${item.name.padEnd(16)} ₹${item.price} × ${item.qty} = ₹${item.price * item.qty}\n`;
-      });
-      receipt += `-----------------------------\nTOTAL: ₹${order.total}\n-----------------------------\n      Thank you! Visit again`;
-
-      const receiptDiv = document.createElement('div');
-      receiptDiv.style.padding = '20px';
-      receiptDiv.style.fontFamily = 'monospace';
-      receiptDiv.style.whiteSpace = 'pre-wrap';
-      receiptDiv.style.fontSize = '12px';
-      receiptDiv.style.width = '250px';
-      document.body.appendChild(receiptDiv);
-      receiptDiv.innerText = receipt;
-
-      showToast("⬇️ Downloading your receipt...");
-
-      html2canvas(receiptDiv).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [260, 400] });
-        pdf.addImage(imgData, 'PNG', 5, 5, 250, 360);
-        pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
-        document.body.removeChild(receiptDiv);
-
-        // 🔐 Delayed cleanup after download completes
-        setTimeout(() => {
-          localStorage.removeItem('cheesy_sessionId');
-          localStorage.removeItem('cheesy_name');
-          localStorage.removeItem('cheesy_table');
-          window.location.href = "index.html";
-        }, 3200);
-      });
-    } else {
-      showStatus("⏳ Please wait, your order is still being prepared.");
+    if (!order || order.status !== 'done') {
       showToast("⌛ Not ready yet");
+      showStatus("⏳ Please wait, your order is still being prepared.");
+      return;
     }
+
+    const dateStr = new Date(order.timestamp).toLocaleString();
+    let receipt = `      Cheesy Delight\n-----------------------------\n`;
+    receipt += `Name: ${order.name}\nTable: ${order.table}\nDate: ${dateStr}\n-----------------------------\n`;
+    order.items.forEach(item => {
+      receipt += `${item.name.padEnd(16)} ₹${item.price} × ${item.qty} = ₹${item.price * item.qty}\n`;
+    });
+    receipt += `-----------------------------\nTOTAL: ₹${order.total}\n-----------------------------\n      Thank you! Visit again`;
+
+    const receiptDiv = document.createElement('div');
+    receiptDiv.style.padding = '20px';
+    receiptDiv.style.fontFamily = 'monospace';
+    receiptDiv.style.whiteSpace = 'pre-wrap';
+    receiptDiv.style.fontSize = '12px';
+    receiptDiv.style.width = '250px';
+    receiptDiv.innerText = receipt;
+    document.body.appendChild(receiptDiv);
+
+    html2canvas(receiptDiv).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [260, 400] });
+      pdf.addImage(imgData, 'PNG', 5, 5, 250, 360);
+      pdf.save(`Cheesy_Delight_Receipt_${sessionId}.pdf`);
+      document.body.removeChild(receiptDiv);
+
+      setTimeout(() => {
+        localStorage.clear();
+        window.location.href = "index.html";
+      }, 3000);
+    });
   });
 }
 
-// ✅ Load Previous + Listen for Kitchen Update
-function loadPreviousOrder() {
-  db.ref('orders/' + sessionId).once('value').then(snapshot => {
-    const order = snapshot.val();
-    if (order && order.status !== 'done') {
-      showStatus("👋 Welcome back! Your order is being prepared.");
-      document.getElementById('checkout-btn').disabled = true;
-    }
-  });
-}
-
+// ✅ Listen for Kitchen Update
 function listenForKitchenUpdate() {
   db.ref('orders/' + sessionId).on('value', snapshot => {
     const order = snapshot.val();
@@ -269,9 +260,19 @@ function listenForKitchenUpdate() {
       document.getElementById('checkout-btn').disabled = false;
       document.getElementById('order-btn').disabled = true;
       showToast("🍽 Order marked as done");
-
-      userAudio.play().catch(e => console.warn('Autoplay blocked'));
+      userAudio.play().catch(() => {});
     } else {
+      document.getElementById('checkout-btn').disabled = true;
+    }
+  });
+}
+
+// ✅ Load Previous Order
+function loadPreviousOrder() {
+  db.ref('orders/' + sessionId).once('value').then(snapshot => {
+    const order = snapshot.val();
+    if (order && order.status !== 'done') {
+      showStatus("👋 Welcome back! Your order is being prepared.");
       document.getElementById('checkout-btn').disabled = true;
     }
   });
