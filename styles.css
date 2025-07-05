@@ -16,19 +16,6 @@ body {
   line-height: 1.6;
 }
 
-.logo-wrapper {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.logo {
-  width: 260px; /* Reduce size from 250px to 160px */
-  max-width: 90%; /* Keeps it responsive */
-  height: auto;
-  object-fit: contain;
-  display: inline-block;
-}
-
 .container {
   max-width: 1200px;
   margin: auto;
@@ -39,12 +26,24 @@ body {
   border: 1px solid #ececec;
 }
 
+/* Logo */
+.logo-wrapper {
+  text-align: center;
+  margin-bottom: 20px;
+}
+.logo {
+  width: 220px;
+  max-width: 90%;
+  height: auto;
+  object-fit: contain;
+  display: inline-block;
+}
+
 /* Headings */
 h1, h2, h3 {
   font-family: var(--font-heading);
   font-weight: 600;
 }
-
 .brand-heading {
   text-align: center;
   font-size: 32px;
@@ -64,6 +63,7 @@ h1, h2, h3 {
   margin-bottom: 20px;
 }
 
+/* Menu Layout */
 .menu-category {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -74,7 +74,7 @@ h1, h2, h3 {
   margin-top: 20px;
 }
 
-/* Prevent jumpy card resizing */
+/* Menu Item Card */
 .menu-item {
   background: #fff;
   border-radius: 12px;
@@ -82,20 +82,18 @@ h1, h2, h3 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; /* Keep content spaced */
+  justify-content: space-between;
+  min-height: 320px;
   box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
   border: 1px solid #f0f0f0;
-  transition: transform 0.3s ease;
-  animation: none;
-  min-height: 320px; /* Prevent layout shift between items */
+  transition: box-shadow 0.2s ease;
 }
 
-/* Hover effect */
 .menu-item:hover {
-  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* Image styling */
+/* Menu Image */
 .menu-image-box img {
   width: 100%;
   max-width: 160px;
@@ -104,44 +102,33 @@ h1, h2, h3 {
   border-radius: 10px;
 }
 
-/* Info section - prevents jumping when switching to qty controls */
+/* Menu Info */
 .menu-info {
   text-align: center;
+  width: 100%;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  min-height: 120px; /* Ensures enough height for both states (button/qty) */
-  width: 100%;
-  transition: all 0.3s ease;
+  justify-content: center;
 }
-
-/* Typography */
 .menu-info p strong {
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 18px;
 }
-
 .menu-info p {
   margin: 6px 0;
   color: #333;
   font-weight: 400;
 }
-
-.menu-info span.price {
+.menu-info .price {
   font-family: var(--font-accent);
   font-weight: 600;
   color: #ff5722;
+  font-size: 16px;
 }
 
-/* Button transition fix */
-.add-btn,
-.qty-controls {
-  transition: all 0.3s ease;
-  min-height: 44px;
-}
-
-/* Add Button styling */
+/* Add Button */
 .add-btn {
   padding: 12px 18px;
   font-size: 14px;
@@ -154,14 +141,14 @@ h1, h2, h3 {
   cursor: pointer;
   margin-top: 10px;
   box-shadow: 0 2px 8px rgba(255, 87, 34, 0.2);
+  transition: background 0.3s ease, transform 0.1s ease;
   text-transform: uppercase;
+  min-height: 44px;
 }
-
 .add-btn:hover {
   background: linear-gradient(to right, #e64a19, #ff7043);
   transform: scale(1.03);
 }
-
 
 /* Quantity Controls */
 .qty-controls {
@@ -170,8 +157,8 @@ h1, h2, h3 {
   justify-content: center;
   gap: 10px;
   margin-top: 10px;
+  min-height: 44px;
 }
-
 .qty-controls button {
   width: 40px;
   height: 40px;
@@ -181,24 +168,53 @@ h1, h2, h3 {
   background: #f5f5f5;
   color: #ff5722;
   border: 1px solid #ddd;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
   cursor: pointer;
   transition: background 0.2s ease, transform 0.1s ease;
-  font-family: var(--font-heading);
 }
-
 .qty-controls button:hover {
   background: #fff0e6;
   transform: scale(1.05);
 }
-
 .qty-controls span {
   min-width: 24px;
   text-align: center;
   font-size: 16px;
   font-weight: 500;
-  font-family: var(--font-body);
-  color: #333;
+}
+
+/* Combo Specific Layout */
+#combos.menu-category {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+#combos .menu-item {
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.combo-images {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.combo-images > div {
+  text-align: center;
+  width: 110px;
+}
+.combo-images img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 6px;
+}
+.combo-images span {
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* Cart */
@@ -210,17 +226,14 @@ h1, h2, h3 {
   box-shadow: rgb(204, 219, 232) 3px 3px 6px 0px inset, rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset;
   border: 1px solid #e0e0e0;
 }
-
 #cart h2 {
   font-family: var(--font-heading);
   font-weight: 600;
 }
-
 #cart ul {
   list-style: none;
   padding-left: 0;
 }
-
 #cart ul li {
   margin: 5px 0;
   display: flex;
@@ -229,7 +242,6 @@ h1, h2, h3 {
   font-size: 15px;
   flex-wrap: wrap;
 }
-
 #cart ul li button {
   background: none;
   border: none;
@@ -245,12 +257,12 @@ h1, h2, h3 {
   gap: 10px;
   margin-top: 10px;
 }
-
 #order-btn,
 #checkout-btn {
   flex: 1;
   padding: 12px 18px;
   font-size: 16px;
+  font-family: var(--font-body);
   font-weight: 600;
   border-radius: 8px;
   background: linear-gradient(to right, #ff5722, #ff7043);
@@ -261,13 +273,11 @@ h1, h2, h3 {
   transition: background 0.3s ease, transform 0.1s ease;
   text-transform: uppercase;
 }
-
 #order-btn:hover,
 #checkout-btn:hover {
   background: linear-gradient(to right, #e64a19, #ff7043);
   transform: scale(1.03);
 }
-
 #order-btn:disabled,
 #checkout-btn:disabled {
   background: #ccc;
@@ -283,7 +293,7 @@ h1, h2, h3 {
   color: #00796b;
 }
 
-/* Toast */
+/* Toast Notification */
 .toast {
   position: fixed;
   bottom: 30px;
@@ -294,13 +304,16 @@ h1, h2, h3 {
   padding: 12px 24px;
   font-size: 14px;
   border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  pointer-events: none;
   animation: toastFadeInOut 3s ease-in-out forwards;
   z-index: 9999;
 }
-
 @keyframes toastFadeInOut {
-  0% { opacity: 0; transform: translate(-50%, 20px); }
-  10%, 90% { opacity: 1; transform: translate(-50%, 0); }
+  0%   { opacity: 0; transform: translate(-50%, 20px); }
+  10%  { opacity: 1; transform: translate(-50%, 0); }
+  90%  { opacity: 1; transform: translate(-50%, 0); }
   100% { opacity: 0; transform: translate(-50%, -10px); }
 }
 
@@ -310,67 +323,35 @@ h1, h2, h3 {
   font-size: 13px;
   color: #888;
   padding: 20px 10px 40px;
+  font-family: var(--font-body);
   border-top: 1px solid #eee;
   margin-top: 40px;
   background: #fafafa;
 }
-
 .site-footer a {
   color: #ff5722;
   text-decoration: none;
   font-weight: 500;
 }
-
 .site-footer a:hover {
   text-decoration: underline;
 }
 
-/* Combo Specific Layout */
-#combos.menu-category {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-#combos .menu-item {
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.combo-images {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.combo-images > div {
-  text-align: center;
-  width: 110px;
-}
-
-.combo-images img {
-  width: 100px;
-  height: 100px;
-  border-radius: 10px;
-  object-fit: cover;
-  margin-bottom: 6px;
-}
-
-.combo-images span {
-  font-size: 14px;
-  font-weight: 500;
-}
-
-/* Responsive override ONLY for combos */
+/* Mobile Adjustments */
 @media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  .menu-category {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
   #combos.menu-category {
     flex-direction: column;
   }
-
   #combos .menu-item {
     width: 100%;
+  }
+  .cart-actions {
+    flex-direction: column;
   }
 }

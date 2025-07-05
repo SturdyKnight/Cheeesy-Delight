@@ -37,65 +37,61 @@ function renderMenuItem(category, itemId, itemData) {
   itemDiv.className = 'menu-item';
   itemDiv.id = `menu-${itemId}`;
 
-  let controlsHTML = '';
-
   const safeName = itemData.name?.replace(/'/g, "\\'");
+  let controlsHTML = '';
+  let priceHTML = '';
 
   // 👉 COMBO item
-// 👉 COMBO item
-if (category === 'combos' && itemData.items && Array.isArray(itemData.items)) {
-  const comboQty = cart.find(i => i.id === itemId)?.qty || 0;
+  if (category === 'combos' && Array.isArray(itemData.items)) {
+    const comboQty = cart.find(i => i.id === itemId)?.qty || 0;
 
-  const renderComboItems = (items) => {
-    return items.map(i => `
-      <div style="text-align: center; width: 110px;">
-        <img src="${i.image}" alt="${i.name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 6px;" />
-        <div style="font-size: 14px; font-weight: 500;">${i.name}</div>
+    const renderComboItems = (items) =>
+      items.map(i => `
+        <div style="text-align:center; width: 110px;">
+          <img src="${i.image}" alt="${i.name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 10px; margin-bottom: 6px;" />
+          <div style="font-size: 14px; font-weight: 500;">${i.name}</div>
+        </div>
+      `).join('');
+
+    const comboImagesHTML = `
+      <div class="combo-images">${renderComboItems(itemData.items)}</div>
+    `;
+
+    priceHTML = `<p style="font-size: 16px; font-weight: 200; color: #000;">₹${itemData.price}</p>`;
+
+    controlsHTML = comboQty === 0
+      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${safeName}', ${itemData.price})">Add</button>`
+      : `<div class="qty-controls">
+          <button onclick="updateQuantity('${itemId}', -1)">−</button>
+          <span>${comboQty}</span>
+          <button onclick="updateQuantity('${itemId}', 1, '${safeName}', ${itemData.price})">+</button>
+        </div>`;
+
+    itemDiv.innerHTML = `
+      ${comboImagesHTML}
+      <div class="menu-info">
+        <p><strong>${itemData.name}</strong></p>
+        ${priceHTML}
+        ${controlsHTML}
       </div>
-    `).join('');
-  };
-
-  const comboImagesHTML = `
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom: 16px;">
-      ${renderComboItems(itemData.items)}
-    </div>
-  `;
-
-  const controlsHTML = comboQty === 0
-    ? `<button class="add-btn" onclick="addToCart('${itemId}', '${safeName}', ${itemData.price})">Add</button>`
-    : `<div class="qty-controls">
-         <button onclick="updateQuantity('${itemId}', -1)">−</button>
-         <span>${comboQty}</span>
-         <button onclick="updateQuantity('${itemId}', 1, '${safeName}', ${itemData.price})">+</button>
-       </div>`;
-
-  itemDiv.innerHTML = `
-    ${comboImagesHTML}
-    <div class="menu-info" style="text-align: center;">
-      <p><strong style="font-size: 18px;">${itemData.name}</strong></p>
-      <p style="margin: 6px 0; font-weight: 600; font-size: 16px;">Meal Price: ₹${itemData.price}</p>
-      ${controlsHTML}
-    </div>
-  `;
-
-  section.appendChild(itemDiv);
-  return;
-}
+    `;
+    section.appendChild(itemDiv);
+    return;
+  }
 
   // 🍕 Pizza
   if (itemData.type === 'pizza') {
     const sizes = [
-      { label: '7"', suffix: '_7', price: itemData.size7 },
-      { label: '10"', suffix: '_10', price: itemData.size10 }
+      { label: '7"', suffix: '_7', price: itemData.size7 ?? 0 },
+      { label: '10"', suffix: '_10', price: itemData.size10 ?? 0 }
     ];
 
     controlsHTML = sizes.map(size => {
       const fullId = itemId + size.suffix;
-      const cartItem = cart.find(i => i.id === fullId);
-      const qty = cartItem ? cartItem.qty : 0;
+      const qty = cart.find(i => i.id === fullId)?.qty || 0;
       return `
         <div style="margin: 6px 0;">
-          <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
+          <div style="font-size: 14px; font-weight: 500; color: #000;">${size.label} - ₹${size.price}</div>
           <div class="qty-controls">
             <button onclick="updateQuantity('${fullId}', -1)">−</button>
             <span>${qty}</span>
@@ -105,20 +101,20 @@ if (category === 'combos' && itemData.items && Array.isArray(itemData.items)) {
       `;
     }).join('');
   }
+
   // 🍜 Noodles
   else if (itemData.type === 'noodles') {
     const sizes = [
-      { label: 'Half', suffix: '_half', price: itemData.half },
-      { label: 'Full', suffix: '_full', price: itemData.full }
+      { label: 'Half', suffix: '_half', price: itemData.half ?? 0 },
+      { label: 'Full', suffix: '_full', price: itemData.full ?? 0 }
     ];
 
     controlsHTML = sizes.map(size => {
       const fullId = itemId + size.suffix;
-      const cartItem = cart.find(i => i.id === fullId);
-      const qty = cartItem ? cartItem.qty : 0;
+      const qty = cart.find(i => i.id === fullId)?.qty || 0;
       return `
         <div style="margin: 6px 0;">
-          <div style="font-size: 14px; margin-bottom: 4px;">${size.label} - ₹${size.price}</div>
+          <div style="font-size: 14px; font-weight: 500; color: #000;">${size.label} - ₹${size.price}</div>
           <div class="qty-controls">
             <button onclick="updateQuantity('${fullId}', -1)">−</button>
             <span>${qty}</span>
@@ -128,25 +124,33 @@ if (category === 'combos' && itemData.items && Array.isArray(itemData.items)) {
       `;
     }).join('');
   }
-  // 🧁 Regular items
+
+  // 🧁 Regular item
   else {
-    const cartItem = cart.find(i => i.id === itemId);
-    const qty = cartItem ? cartItem.qty : 0;
+    const qty = cart.find(i => i.id === itemId)?.qty || 0;
+    priceHTML = `<p style="font-size: 16px; font-weight: 200; color: #000;">₹${itemData.price ?? 0}</p>`;
+
     controlsHTML = qty === 0
-      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${safeName}', ${itemData.price})">Add</button>`
+      ? `<button class="add-btn" onclick="addToCart('${itemId}', '${safeName}', ${itemData.price ?? 0})">Add</button>`
       : `<div class="qty-controls">
-           <button onclick="updateQuantity('${itemId}', -1)">−</button>
-           <span>${qty}</span>
-           <button onclick="updateQuantity('${itemId}', 1, '${safeName}', ${itemData.price})">+</button>
-         </div>`;
+          <button onclick="updateQuantity('${itemId}', -1)">−</button>
+          <span>${qty}</span>
+          <button onclick="updateQuantity('${itemId}', 1, '${safeName}', ${itemData.price ?? 0})">+</button>
+        </div>`;
   }
 
+  // ✅ Final render for non-combo
   itemDiv.innerHTML = `
     <div class="menu-image-box">
       <img src="${itemData.image || 'https://via.placeholder.com/100'}" alt="${itemData.name}" />
     </div>
     <div class="menu-info">
       <p><strong>${itemData.name}</strong></p>
+      ${
+        itemData.type === 'pizza' || itemData.type === 'noodles'
+          ? ''
+          : priceHTML
+      }
       <div id="qty-${itemId}">${controlsHTML}</div>
     </div>
   `;
@@ -317,7 +321,7 @@ function listenForKitchenUpdate() {
       document.getElementById('checkout-btn').disabled = true;
     }
   });
-}
+} 
 
 // ✅ Init
 document.addEventListener('DOMContentLoaded', () => {
