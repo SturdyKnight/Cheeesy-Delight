@@ -68,7 +68,7 @@ function renderMenuItem(category, itemId, itemData) {
       <div class="menu-info">
         <p><strong>${itemData.name}</strong></p>
         ${priceHTML}
-        ${controlsHTML}
+        <div class="control-box">${controlsHTML}</div>
       </div>
     `;
     section.appendChild(itemDiv);
@@ -332,8 +332,25 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('order-btn').addEventListener('click', orderNow);
   document.getElementById('checkout-btn').addEventListener('click', checkout);
 
-  // add this:
   document.getElementById('sticky-summary-btn').addEventListener('click', () => {
     document.getElementById('cart').scrollIntoView({ behavior: 'smooth' });
   });
+
+  // Sticky bar hide logic:
+  const footer = document.querySelector('.site-footer');
+  const stickyBar = document.getElementById('sticky-bar');
+
+  if (footer && stickyBar) {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          stickyBar.style.transform = 'translateY(100%)'; // hide
+        } else {
+          stickyBar.style.transform = 'translateY(0)';     // show
+        }
+      });
+    }, { threshold: 0.1 });
+
+    observer.observe(footer);
+  }
 });
