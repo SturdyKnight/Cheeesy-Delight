@@ -6,24 +6,22 @@
   --font-brand: 'Pacifico', cursive;
 }
 
-/* Base layout */
-body {
-  font-family: var(--font-body);
-  background-color: #fdfdfd;
-  margin: 0;
-  padding: 0;
-  font-size: 16px;
-  line-height: 1.6;
+/* Global Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 20px;
-  background: white;
-  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
-  border-radius: 12px;
-  border: 1px solid #ececec;
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  font-size: 16px;
+  font-family: var(--font-body);
+  background-color: #fdfdfd;
+  line-height: 1.6;
 }
 
 /* Logo */
@@ -37,6 +35,17 @@ body {
   height: auto;
   object-fit: contain;
   display: inline-block;
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #ececec;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
 }
 
 /* Headings */
@@ -84,16 +93,15 @@ h1, h2, h3 {
   align-items: center;
   justify-content: space-between;
   min-height: 320px;
-  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
   border: 1px solid #f0f0f0;
+  box-shadow: rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px;
   transition: box-shadow 0.2s ease;
 }
-
 .menu-item:hover {
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* Menu Image */
+/* Image */
 .menu-image-box img {
   width: 100%;
   max-width: 160px;
@@ -102,7 +110,7 @@ h1, h2, h3 {
   border-radius: 10px;
 }
 
-/* Menu Info */
+/* Info */
 .menu-info {
   text-align: center;
   width: 100%;
@@ -132,8 +140,8 @@ h1, h2, h3 {
 .add-btn {
   padding: 12px 18px;
   font-size: 14px;
-  font-family: var(--font-body);
   font-weight: 600;
+  font-family: var(--font-body);
   border-radius: 8px;
   background: linear-gradient(to right, #ff5722, #ff7043);
   color: white;
@@ -141,9 +149,9 @@ h1, h2, h3 {
   cursor: pointer;
   margin-top: 10px;
   box-shadow: 0 2px 8px rgba(255, 87, 34, 0.2);
-  transition: background 0.3s ease, transform 0.1s ease;
   text-transform: uppercase;
   min-height: 44px;
+  transition: background 0.3s ease, transform 0.1s ease;
 }
 .add-btn:hover {
   background: linear-gradient(to right, #e64a19, #ff7043);
@@ -182,16 +190,16 @@ h1, h2, h3 {
   font-weight: 500;
 }
 
-/* Combo Specific Layout */
+/* ✅ Combo Specific Layout */
 #combos.menu-category {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 #combos .menu-item {
+  width: 100%;
   flex-direction: column;
   align-items: center;
-  width: 100%;
 }
 
 .combo-images {
@@ -200,10 +208,13 @@ h1, h2, h3 {
   justify-content: center;
   gap: 16px;
   margin-bottom: 16px;
+  max-width: 100%;
+  overflow: hidden;
 }
 .combo-images > div {
   text-align: center;
-  width: 110px;
+  width: 100px;
+  max-width: 100%;
 }
 .combo-images img {
   width: 100px;
@@ -223,8 +234,8 @@ h1, h2, h3 {
   padding: 20px;
   background: #fefefe;
   border-radius: 12px;
-  box-shadow: rgb(204, 219, 232) 3px 3px 6px 0px inset, rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset;
   border: 1px solid #e0e0e0;
+  box-shadow: rgb(204, 219, 232) 3px 3px 6px 0px inset, rgba(255, 255, 255, 0.5) -3px -3px 6px 1px inset;
 }
 #cart h2 {
   font-family: var(--font-heading);
@@ -251,7 +262,7 @@ h1, h2, h3 {
   margin-left: 10px;
 }
 
-/* Buttons: Order / Checkout */
+/* Order Buttons */
 .cart-actions {
   display: flex;
   gap: 10px;
@@ -262,16 +273,16 @@ h1, h2, h3 {
   flex: 1;
   padding: 12px 18px;
   font-size: 16px;
-  font-family: var(--font-body);
   font-weight: 600;
   border-radius: 8px;
+  font-family: var(--font-body);
   background: linear-gradient(to right, #ff5722, #ff7043);
   color: white;
   border: none;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(255, 87, 34, 0.2);
-  transition: background 0.3s ease, transform 0.1s ease;
   text-transform: uppercase;
+  transition: background 0.3s ease, transform 0.1s ease;
 }
 #order-btn:hover,
 #checkout-btn:hover {
@@ -337,19 +348,14 @@ h1, h2, h3 {
   text-decoration: underline;
 }
 
-/* Mobile Adjustments */
+/* ✅ Mobile Adjustments */
 @media (max-width: 768px) {
   .container {
-    padding: 15px;
+    max-width: 100%;
+    padding: 20px;
   }
-  .menu-category {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  }
-  #combos.menu-category {
-    flex-direction: column;
-  }
-  #combos .menu-item {
-    width: 100%;
+  .combo-images > div {
+    width: 45%;
   }
   .cart-actions {
     flex-direction: column;
