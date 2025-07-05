@@ -1,13 +1,14 @@
-<!-- 🍽️ menu.html -->
-<!DOCTYPE html>
-<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Cheeesy Delight - Menu</title>
+
+  <!-- ✅ Fixed Fonts (includes Quicksand) -->
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600;700&family=Quicksand:wght@400;500;600&family=Rubik:wght@500;600&display=swap" rel="stylesheet" />
+  
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="logo.png" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;600;700&family=Rubik:wght@500;600&family=Pacifico&display=swap" rel="stylesheet" />
 
   <!-- Session Check -->
   <script>
@@ -27,9 +28,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- App Logic (correct filename) -->
+  <!-- App Logic -->
   <script defer src="script.js"></script>
 
+  <!-- Page Load & Modal Style -->
   <style>
     #loader {
       display: flex;
@@ -98,6 +100,7 @@
         <!-- Menu categories will be injected by JS -->
       </div>
 
+      <!-- ✅ Order Summary Section -->
       <div id="cart">
         <h2>Your Order</h2>
         <ul id="cart-items"></ul>
@@ -112,6 +115,12 @@
       <div id="receipt-preview" style="display: none; width: 384px; height: 576px; position: relative;">
         <div id="receipt-content" style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4;"></div>
       </div>
+    </div>
+
+    <!-- ✅ Sticky Order Summary Bar -->
+    <div id="sticky-bar">
+      <div class="sticky-total">Total: ₹<span id="sticky-total">0</span></div>
+      <button id="sticky-summary-btn" disabled>🛒 Order Summary</button>
     </div>
   </div>
 
