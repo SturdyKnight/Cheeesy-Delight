@@ -219,33 +219,42 @@ function loadMenu() {
   });
 }
 
-// ✅ Place Order
 function orderNow() {
   if (!cart.length) return;
+
+  const mobileNumber = localStorage.getItem('cheesy_mobile') || ''; // ✅ Get mobile from localStorage
+
   db.ref('orders/' + sessionId).once('value').then(snapshot => {
     const prev = snapshot.val();
     const allItems = prev ? [...prev.items, ...cart] : [...cart];
+
     const merged = {};
     allItems.forEach(item => {
       if (!merged[item.id]) merged[item.id] = { ...item };
       else merged[item.id].qty += item.qty;
     });
+
     const finalItems = Object.values(merged);
     const newTotal = finalItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+
+    // ✅ Save to orders with mobile number
     db.ref('orders/' + sessionId).set({
       orderId: sessionId,
       name: customerName,
       table: tableNumber,
+      mobile: mobileNumber, // ✅ <-- This line added
       items: finalItems,
       total: newTotal,
       timestamp: new Date().toISOString(),
       status: 'preparing'
     });
+
     db.ref(`orders/${sessionId}/updates`).push({
       timestamp: new Date().toISOString(),
       added: [...cart],
       total: newTotal
     });
+
     cart = [];
     updateCart();
     loadMenu();

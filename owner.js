@@ -65,5 +65,40 @@ function loadOrders() {
   });
 }
 
+function downloadUserCSV() {
+  db.ref('orders').once('value').then(snapshot => {
+    const orders = snapshot.val() || {};
+    const rows = [["Name", "Mobile", "Table", "Order ID", "Status", "Total", "Timestamp"]];
+
+    Object.entries(orders).forEach(([id, order]) => {
+      rows.push([
+        order.name || '',
+        order.mobile || '', // optional if not present
+        order.table || '',
+        order.orderId || id,
+        order.status || '',
+        order.total || 0,
+        new Date(order.timestamp).toLocaleString()
+      ]);
+    });
+
+    const csvContent = rows.map(row =>
+      row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Cheeesy_Orders_${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }).catch(err => {
+    alert("⚠️ Failed to download order data.");
+    console.error("CSV Download Error:", err);
+  });
+}
+
+
 // 🚀 Start listening
 loadOrders();

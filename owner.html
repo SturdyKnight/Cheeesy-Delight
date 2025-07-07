@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Owner Dashboard - Cheeesy Delight</title>
   <link rel="icon" href="logo.png" type="image/png">
-  
+
   <!-- Fonts & Chart.js -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -84,7 +85,8 @@
       border-collapse: collapse;
     }
 
-    th, td {
+    th,
+    td {
       padding: 12px 16px;
       text-align: left;
       font-size: 14px;
@@ -101,8 +103,15 @@
       background-color: #fafafa;
     }
 
-    .status.done { color: green; font-weight: 600; }
-    .status.preparing { color: orange; font-weight: 600; }
+    .status.done {
+      color: green;
+      font-weight: 600;
+    }
+
+    .status.preparing {
+      color: orange;
+      font-weight: 600;
+    }
 
     .card {
       background: white;
@@ -147,8 +156,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 768px) {
@@ -158,14 +174,20 @@
         font-size: 1.3rem;
       }
 
-      nav { margin-top: 10px; }
+      nav {
+        margin-top: 10px;
+      }
 
       nav button {
         font-size: 0.95rem;
         margin: 4px 6px 0 0;
       }
 
-      table, th, td { font-size: 15px; }
+      table,
+      th,
+      td {
+        font-size: 15px;
+      }
     }
   </style>
 </head>
@@ -178,8 +200,10 @@
     <nav>
       <button onclick="showTab('orders')">📋 Orders</button>
       <button onclick="showTab('stats')">📊 Stats</button>
+      <button onclick="showTab('mobile')">📱 Mobile Numbers</button>
     </nav>
   </header>
+
 
   <!-- ✅ Orders Tab -->
   <div class="tab-content active" id="orders">
@@ -203,28 +227,53 @@
     <div id="total-sales">Total Sales: ₹0</div>
   </div>
 
-  <!-- ✅ Stats Tab -->
-  <div class="tab-content" id="stats">
-    <h5>📊 Sales Overview</h5>
+<!-- ✅ Stats Tab -->
+<div class="tab-content" id="stats">
+  <h5>📊 Sales Overview</h5>
 
-    <div class="card">
-      <h6>Most Ordered Items</h6>
-      <canvas id="categoryPieChart" height="200"></canvas>
-    </div>
+  <div class="card">
+    <h6>Most Ordered Items</h6>
+    <canvas id="categoryPieChart" height="200"></canvas>
+  </div>
 
-    <div class="card">
-      <h6>Monthly Revenue</h6>
-      <canvas id="salesChart" height="200"></canvas>
-    </div>
+  <div class="card">
+    <h6>Monthly Revenue</h6>
+    <canvas id="salesChart" height="200"></canvas>
+  </div>
 
-    <div class="card">
-      <h6>Orders per Month</h6>
-      <canvas id="ordersChart" height="200"></canvas>
-    </div>
+  <div class="card">
+    <h6>Orders per Month</h6>
+    <canvas id="ordersChart" height="200"></canvas>
+  </div>
+</div>
+
+<!-- ✅ Mobile Numbers Tab (moved outside stats tab!) -->
+<div class="tab-content" id="mobile">
+  <h5>📱 User Mobile Numbers</h5>
+  <p>This will download a CSV file containing all users' name, mobile number, table number, and order session ID.</p>
+
+  <div style="margin-top: 20px;">
+    <button onclick="downloadUserCSV()" style="
+      padding: 12px 20px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    ">
+      📥 Download Users CSV
+    </button>
+  </div>
+</div>
+
   </div>
 
   <!-- ✅ Date Filter FAB -->
-  <button class="fab" title="Filter by Date" onclick="document.getElementById('dateFilter').style.display = 'flex'">📅</button>
+  <button class="fab" title="Filter by Date"
+    onclick="document.getElementById('dateFilter').style.display = 'flex'">📅</button>
 
   <!-- ✅ Scripts -->
   <script src="owner.js"></script>
@@ -242,4 +291,5 @@
     });
   </script>
 </body>
+
 </html>
