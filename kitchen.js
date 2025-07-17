@@ -6,12 +6,20 @@ const firebaseConfig = {
   projectId: "cheesydelight-80a43",
   storageBucket: "cheesydelight-80a43.appspot.com",
   messagingSenderId: "433558050592",
-  appId: "1:433558050592:web:169b277e2337931475e945"
+  appId: "1:433558050592:web:169b277e2337931475e945",
 };
 
 // ✅ Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
+
+// ✅ Global Promo Holder
+window.currentPromo = null;
+
+// ✅ Now it's safe to use db
+db.ref("promo").on("value", (snap) => {
+  window.currentPromo = snap.val();
+});
 
 // ✅ DOM Elements
 const ordersDiv = document.getElementById("orders");
@@ -23,19 +31,37 @@ function renderOrder(orderId, orderData, latestUpdate = null) {
   card.className = "order-card";
   card.id = `order-${orderId}`;
 
-  const itemsHTML = orderData.items.map(
-    item => `<li>${item.name} × ${item.qty} - ₹${item.price * item.qty}</li>`
-  ).join("");
+  const itemsHTML = orderData.items
+    .map(
+      (item) =>
+        `<li>${item.name} × ${item.qty} - ₹${item.price * item.qty}</li>`
+    )
+    .join("");
 
-  let updatesHTML = '';
+  let updatesHTML = "";
   if (latestUpdate && latestUpdate.added?.length > 0) {
     updatesHTML = `
       <div style="margin-top: 10px;">
         <strong style="color: green;">🆕 New Items in This Update:</strong>
         <ul>
-          ${latestUpdate.added.map(item => `<li>${item.name} × ${item.qty}</li>`).join("")}
+          ${latestUpdate.added
+            .map((item) => `<li>${item.name} × ${item.qty}</li>`)
+            .join("")}
         </ul>
       </div>
+    `;
+  }
+
+  // 🧠 Calculate discount if promo exists
+  let discountInfo = "";
+  if (window.currentPromo?.discount) {
+    const discount = window.currentPromo.discount;
+    const discountedTotal = Math.round(orderData.total * (1 - discount / 100));
+    discountInfo = `
+      <p>
+        <strong>🎉 Promo Applied:</strong> ${discount}% OFF
+        <br><strong>Final Total:</strong> ₹${discountedTotal}
+      </p>
     `;
   }
 
@@ -46,7 +72,10 @@ function renderOrder(orderId, orderData, latestUpdate = null) {
     <ul>${itemsHTML}</ul>
     ${updatesHTML}
     <p><strong>Total:</strong> ₹${orderData.total}</p>
-    <p><strong>Time:</strong> ${new Date(orderData.timestamp).toLocaleString()}</p>
+    ${discountInfo}
+    <p><strong>Time:</strong> ${new Date(
+      orderData.timestamp
+    ).toLocaleString()}</p>
     <button class="btn waves-effect waves-light orange darken-2" onclick="markAsDone('${orderId}')">
       ✅ Mark as Done
     </button>
@@ -61,7 +90,7 @@ function renderOrder(orderId, orderData, latestUpdate = null) {
   if (Notification.permission === "granted") {
     new Notification("🍕 New Order!", {
       body: `Table ${orderData.table} placed an order.`,
-      icon: "logo.png"
+      icon: "logo.png",
     });
   }
 }
@@ -80,7 +109,7 @@ function markAsDone(orderId) {
 
 // ✅ Load and listen for orders
 function loadOrders() {
-  db.ref("orders").on("value", snapshot => {
+  db.ref("orders").on("value", (snapshot) => {
     const orders = snapshot.val();
     ordersDiv.innerHTML = "";
 
@@ -102,7 +131,7 @@ function loadOrders() {
       db.ref(`orders/${orderId}/updates`)
         .orderByKey()
         .limitToLast(1)
-        .once("value", updateSnap => {
+        .once("value", (updateSnap) => {
           const updates = updateSnap.val();
           let latestUpdate = null;
           if (updates) {
@@ -115,7 +144,7 @@ function loadOrders() {
   });
 
   // ✅ Auto-remove done orders visually
-  db.ref("orders").on("child_changed", snapshot => {
+  db.ref("orders").on("child_changed", (snapshot) => {
     const id = snapshot.key;
     const order = snapshot.val();
     if (order.status === "done") {
@@ -131,7 +160,7 @@ function loadOrders() {
 // ✅ Ask notification permission
 function requestNotificationPermission() {
   if ("Notification" in window && Notification.permission !== "granted") {
-    Notification.requestPermission().then(permission => {
+    Notification.requestPermission().then((permission) => {
       console.log("🔔 Notification permission:", permission);
     });
   }
@@ -139,6 +168,16 @@ function requestNotificationPermission() {
 
 // ✅ Init on page load
 window.onload = function () {
-  loadOrders();
+  // First load promo once
+  db.ref("promo").once("value").then((snap) => {
+    window.currentPromo = snap.val() || null;
+    loadOrders(); // Only now load orders
+  });
+
+  // Then keep listening to future changes
+  db.ref("promo").on("value", (snap) => {
+    window.currentPromo = snap.val() || null;
+  });
+
   requestNotificationPermission();
 };
