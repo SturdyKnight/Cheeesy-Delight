@@ -1,192 +1,392 @@
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cheeesy Delight - Menu</title>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cheeesy Delight - Menu</title>
 
-  <!-- ✅ Fixed Fonts (includes Quicksand) -->
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600&display=swap" rel="stylesheet">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600;700&family=Quicksand:wght@400;500;600&family=Rubik:wght@500;600&display=swap"
-    rel="stylesheet" />
+    <!-- ✅ Fixed Fonts (includes Quicksand) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600;700&family=Quicksand:wght@400;500;600&family=Rubik:wght@500;600&display=swap"
+      rel="stylesheet"
+    />
 
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" type="image/png" href="logo.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" type="image/png" href="logo.png" />
 
-  <!-- Session Check -->
-  <script>
-    const urlSession = new URLSearchParams(window.location.search).get('session');
-    const localSession = localStorage.getItem('cheesy_sessionId');
-    if (!urlSession || urlSession !== localSession) {
-      alert("⚠️ Your session has expired or is invalid. Please start your order again.");
-      window.location.href = "index.html";
-    }
-  </script>
+    <!-- Session Check -->
+    <script>
+      const urlSession = new URLSearchParams(window.location.search).get(
+        "session"
+      );
+      const localSession = localStorage.getItem("cheesy_sessionId");
+      if (!urlSession || urlSession !== localSession) {
+        alert(
+          "⚠️ Your session has expired or is invalid. Please start your order again."
+        );
+        window.location.href = "index.html";
+      }
+    </script>
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-  <!-- PDF Tools -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- PDF Tools -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-  <!-- App Logic -->
-  <script defer src="script.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-  <!-- Page Load & Modal Style -->
-  <style>
-    #loader {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: white;
-      flex-direction: column;
-      z-index: 9999;
-      transition: opacity 0.5s ease;
-    }
+    <!-- App Logic -->
+    <script defer src="script.js"></script>
 
+    <!-- Page Load & Modal Style -->
+    <style>
+      #loader {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: white;
+        flex-direction: column;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
 
-    #menu-main {
-      display: none;
-      opacity: 0;
-      transition: opacity 0.5s ease;
-    }
+      #menu-main {
+        display: none;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+      }
 
-    .fade-in {
-      display: block !important;
-      opacity: 1 !important;
-    }
+      .fade-in {
+        display: block !important;
+        opacity: 1 !important;
+      }
 
-    .cooking-text {
-      font-family: 'Pacifico', cursive;
-      font-size: 22px;
-      margin-top: 10px;
-      color: #ff5722;
-    }
+      .cooking-text {
+        font-family: "Pacifico", cursive;
+        font-size: 22px;
+        margin-top: 10px;
+        color: #ff5722;
+      }
 
-    #backModal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 999;
-      justify-content: center;
-      align-items: center;
-    }
+      /* Sticky Category Bar */
+      .categories {
+        position: sticky;
+        top: 0;
+        z-index: 999;
+        background-color: #fff;
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        padding: 10px 12px 14px;
+        border-bottom: 1px solid #eee;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+        scroll-behavior: smooth;
+      }
 
-    #backModal .modal-content {
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      text-align: center;
-      max-width: 400px;
-    }
+      /* Scroll margin to prevent header being hidden */
+      .menu-category {
+        scroll-margin-top: 120px;
+        /* Adjust to ensure category headers are fully visible */
+      }
 
-    #backModal button {
-      background-color: #ff5722;
-      border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 6px;
-      margin-top: 15px;
-      cursor: pointer;
-    }
-  </style>
-</head>
+      /* Back Modal */
+      #backModal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 999;
+        justify-content: center;
+        align-items: center;
+      }
 
-<body>
-  <!-- Loader -->
-  <div id="loader">
-    <img src="cooking.gif" alt="Cooking..." width="120" />
-    <div class="cooking-text">Preparing your delicious menu!</div>
-  </div>
+      #backModal .modal-content {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        text-align: center;
+        max-width: 400px;
+      }
 
+      #backModal button {
+        background-color: #ff5722;
+        border: none;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 6px;
+        margin-top: 15px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
 
-  <!-- Main Menu -->
-  <div id="menu-main">
-    <div class="container">
+  <body>
+    <!-- Loader -->
+    <div id="loader">
+      <img src="cooking.gif" alt="Cooking..." width="120" />
+      <div class="cooking-text">Preparing your delicious menu!</div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="menu-main">
       <div class="logo-wrapper">
         <img src="logo.png" alt="Cheeesy Delight Logo" class="logo" />
       </div>
 
-      <div id="menu-section">
-        <!-- Menu categories will be injected by JS -->
+      <!-- Sticky Header (Search + Category Bar) -->
+      <div class="sticky-header">
+        <!-- Search Bar -->
+        <div class="search-header">
+          <div class="search-container">
+            <div class="search-bar">
+              <svg
+                class="search-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+              >
+                <path
+                  d="M7.33333 12.6667C10.2789 12.6667 12.6667 10.2789 12.6667 7.33333C12.6667 4.38781 10.2789 2 7.33333 2C4.38781 2 2 4.38781 2 7.33333C2 10.2789 4.38781 12.6667 7.33333 12.6667Z"
+                  stroke="#192839"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M13.9996 13.9996L11.0996 11.0996"
+                  stroke="#192839"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <input
+                type="text"
+                id="search-input"
+                class="search-input"
+                placeholder="Search item"
+              />
+              <span
+                class="close-icon"
+                style="display: none"
+                onclick="clearSearch()"
+              >
+                <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                  <path
+                    d="M12 4L4 12M4 4L12 12"
+                    stroke="black"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div id="search-results" class="search-results"></div>
+
+        <!-- Category Bar -->
+        <div id="category-bar" class="categories"></div>
       </div>
 
-      <!-- ✅ Order Summary Section -->
-      <div id="cart">
-        <h2>Your Order</h2>
-        <ul id="cart-items"></ul>
-        <p>Total: ₹<span id="total">0</span></p>
+      <!-- Menu Content -->
+      <div class="container">
+        <!-- Promo Notification Popup -->
+        <div
+          id="promo-overlay"
+          style="
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+          "
+        >
+          <div
+            id="promo-toast"
+            style="
+              background: #fffde7;
+              padding: 28px 32px;
+              border-radius: 18px;
+              box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+              text-align: center;
+              max-width: 400px;
+              width: 90%;
+              position: relative;
+              animation: popIn 0.4s ease-out;
+              cursor: pointer;
+            "
+          >
+            <img
+              id="promo-toast-img"
+              src=""
+              style="max-width: 100%; border-radius: 12px; margin-bottom: 16px"
+            />
+            <h5
+              style="color: #d84315; font-weight: bold"
+              id="promo-toast-msg"
+            ></h5>
+            <p style="color: #555">Tap anywhere to dismiss</p>
+          </div>
+        </div>
 
-        <div class="cart-actions">
-          <button id="order-btn" disabled>🛎️ Order</button>
-          <button id="checkout-btn" disabled>🧾 Download Bill</button>
+        <style>
+          @keyframes popIn {
+            from {
+              opacity: 0;
+              transform: scale(0.9);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+        </style>
+
+        <div id="menu-section">
+          <!-- Menu categories will be injected here -->
+        </div>
+        <!-- Order Summary Section -->
+        <div id="cart">
+          <h2>Your Order</h2>
+          <ul id="cart-items"></ul>
+          <p>Total: ₹<span id="total">0</span></p>
+          <p
+            id="discount-line"
+            style="color: #ff5722; font-weight: bold; display: none"
+          ></p>
+
+          <div class="cart-actions">
+            <button id="order-btn" disabled>🛎️ Order</button>
+            <button id="checkout-btn" disabled>🧾 Download Bill</button>
+          </div>
+        </div>
+
+        <div
+          id="receipt-preview"
+          style="display: none; width: 384px; height: 576px; position: relative"
+        >
+          <div
+            id="receipt-content"
+            style="
+              position: absolute;
+              top: 60px;
+              left: 30px;
+              right: 30px;
+              font-family: monospace;
+              font-size: 13px;
+              line-height: 1.4;
+            "
+          ></div>
         </div>
       </div>
 
-      <div id="receipt-preview" style="display: none; width: 384px; height: 576px; position: relative;">
-        <div id="receipt-content"
-          style="position: absolute; top: 60px; left: 30px; right: 30px; font-family: monospace; font-size: 13px; line-height: 1.4;">
-        </div>
+      <!-- Sticky Order Summary Bar -->
+      <div id="sticky-bar">
+        <div class="sticky-total">Total: ₹<span id="sticky-total">0</span></div>
+        <button id="sticky-summary-btn" disabled>🛒 Order Summary</button>
       </div>
     </div>
 
-    <!-- ✅ Sticky Order Summary Bar -->
-    <div id="sticky-bar">
-      <div class="sticky-total">Total: ₹<span id="sticky-total">0</span></div>
-      <button id="sticky-summary-btn" disabled>🛒 Order Summary</button>
-    </div>
-  </div>
+    <!-- Footer -->
+    <div id="footer-container"></div>
+    <script src="footer.js"></script>
 
-  <div id="footer-container"></div>
-  <script src="footer.js"></script>
-  
-  <!-- Modal on back press -->
-  <div id="backModal">
-    <div class="modal-content">
-      <h4>Please Stay!</h4>
-      <p>Going back may cancel your session and order.</p>
-      <button onclick="closeBackModal()">Okay, I’ll Stay</button>
+    <!-- Modal on Back press -->
+    <div id="backModal">
+      <div class="modal-content">
+        <h4>Please Stay!</h4>
+        <p>Going back may cancel your session and order.</p>
+        <button onclick="closeBackModal()">Okay, I’ll Stay</button>
+      </div>
     </div>
-  </div>
 
-  <script>
-    window.addEventListener("load", () => {
-      setTimeout(() => {
-        document.getElementById("loader").style.display = "none";
-        document.getElementById("menu-main").classList.add("fade-in");
+    <script>
+      const logo = document.querySelector(".logo-wrapper");
+      window.addEventListener("scroll", () => {
+        if (window.scrollY > 60) {
+          logo.style.opacity = "0";
+          logo.style.transition = "opacity 0.3s ease";
+        } else {
+          logo.style.opacity = "1";
+        }
+      });
+
+      // Page Load Logic (show loader, fade-in content)
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          document.getElementById("loader").style.display = "none";
+          document.getElementById("menu-main").classList.add("fade-in");
+          history.pushState(null, "", location.href);
+        }, 2000);
+      });
+
+      window.addEventListener("scroll", function () {
+        const header = document.querySelector(".sticky-header");
+        if (window.scrollY > 100) {
+          // adjust this threshold as you like
+          header.classList.add("sticky");
+        } else {
+          header.classList.remove("sticky");
+        }
+      });
+
+      // Prevent going back during session
+      window.addEventListener("popstate", function () {
+        showBackModal();
         history.pushState(null, "", location.href);
-      }, 2000);
+      });
 
-    });
+      function showBackModal() {
+        document.getElementById("backModal").style.display = "flex";
+      }
 
-    window.addEventListener("popstate", function () {
-      showBackModal();
-      history.pushState(null, "", location.href);
-    });
+      function closeBackModal() {
+        document.getElementById("backModal").style.display = "none";
+      }
 
-    function showBackModal() {
-      document.getElementById("backModal").style.display = "flex";
-    }
+      // Prevent closing page without warning
+      window.addEventListener("beforeunload", function (e) {
+        e.preventDefault();
+        e.returnValue = "";
+      });
 
-    function closeBackModal() {
-      document.getElementById("backModal").style.display = "none";
-    }
+      document.addEventListener("DOMContentLoaded", () => {
+        const stickyHeader = document.querySelector(".sticky-header");
 
-    window.addEventListener("beforeunload", function (e) {
-      e.preventDefault();
-      e.returnValue = "";
-    });
-  </script>
-</body>
+        function adjustLayout() {
+          if (stickyHeader) {
+            const headerHeight = stickyHeader.offsetHeight;
+            document.body.style.paddingTop = `${headerHeight}px`;
+          }
+        }
 
+        adjustLayout();
+        window.addEventListener("resize", adjustLayout);
+      });
+    </script>
+  </body>
 </html>
